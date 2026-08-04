@@ -168,7 +168,7 @@ function BasicsPanel({ form, upd }) {
           <TextInput value={form.location} onChange={v => upd('location', v)} placeholder="e.g. Austin, TX" />
         </Field>
         <Field label="Height">
-          <TextInput value={form.height} onChange={v => upd('height', v)} placeholder='e.g. 5\'6" or 168 cm' />
+          <TextInput value={form.height} onChange={v => upd('height', v)} placeholder={`e.g. 5'6" or 168 cm`} />
         </Field>
         <Field label="Weight">
           <TextInput value={form.weight} onChange={v => upd('weight', v)} placeholder="e.g. 130 lbs or 59 kg" />

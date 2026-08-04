@@ -14,32 +14,34 @@ I can help you with:
 
 If you've filled out the patient profile (click the profile button in the sidebar), I'll use that information to give you more tailored answers.
 
-**Important:** All of my responses are AI-generated and for educational purposes only. Please make all treatment decisions in close collaboration with your medical oncology team. I'm here to help you understand, prepare, and ask better questions — not to replace your doctors.
+**Important:** All of my responses are AI-generated and for educational purposes only. Please make all treatment decisions in close collaboration with your medical oncology team.
 
 How can I help you today?`;
 
-const INTRO_MESSAGE = {
-  id: 'intro',
-  role: 'assistant',
-  content: INTRO_CONTENT,
-  timestamp: new Date().toISOString(),
-};
-
-export default function ChatWindow({ chat, profile, onUpdateMessages, onRenameChat }) {
+export default function ChatWindow({ chat, authFetch, onRenameChat }) {
+  const [messages, setMessages] = useState(null); // null = loading
   const [input, setInput]       = useState('');
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState(null);
   const bottomRef               = useRef(null);
   const textareaRef             = useRef(null);
 
-  const displayMessages = chat.messages.length === 0 ? [INTRO_MESSAGE] : chat.messages;
+  // Load message history when chat mounts
+  useEffect(() => {
+    authFetch(`/api/chats/${chat.id}/messages`)
+      .then(r => r.json())
+      .then(data => setMessages(data.messages || []))
+      .catch(() => setMessages([]));
+  }, [chat.id]);
 
-  // Scroll to bottom on new messages
+  const displayMessages = messages !== null && messages.length === 0
+    ? [{ id: 'intro', role: 'assistant', content: INTRO_CONTENT, created_at: new Date().toISOString() }]
+    : (messages || []);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [displayMessages.length, loading]);
 
-  // Auto-resize textarea
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -49,61 +51,42 @@ export default function ChatWindow({ chat, profile, onUpdateMessages, onRenameCh
 
   async function handleSend() {
     const text = input.trim();
-    if (!text || loading) return;
+    if (!text || loading || messages === null) return;
 
-    const userMsg = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: text,
-      timestamp: new Date().toISOString(),
-    };
-
-    const newMessages = [...chat.messages, userMsg];
-    onUpdateMessages(newMessages);
+    const optimistic = { id: `tmp-${Date.now()}`, role: 'user', content: text, created_at: new Date().toISOString() };
+    setMessages(prev => [...(prev || []), optimistic]);
     setInput('');
     setError(null);
     setLoading(true);
 
-    // Auto-name chat from first message
-    if (chat.messages.length === 0 && chat.name === 'New Chat') {
+    // Auto-name chat on first real message
+    if ((messages || []).length === 0 && chat.name === 'New Chat') {
       onRenameChat(text.length > 45 ? text.slice(0, 45) + '…' : text);
     }
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await authFetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-          patientProfile: profile,
-        }),
+        body: JSON.stringify({ chatId: chat.id, content: text }),
       });
-
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || `Server error (${res.status})`);
       }
-
       const data = await res.json();
-      const aiMsg = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.content,
-        timestamp: new Date().toISOString(),
-      };
-      onUpdateMessages([...newMessages, aiMsg]);
+      const aiMsg = { id: `ai-${Date.now()}`, role: 'assistant', content: data.content, created_at: new Date().toISOString() };
+      setMessages(prev => [...(prev || []), aiMsg]);
     } catch (err) {
       setError(err.message);
+      // Remove optimistic message on failure
+      setMessages(prev => (prev || []).filter(m => m.id !== optimistic.id));
     } finally {
       setLoading(false);
     }
   }
 
   function handleKeyDown(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   }
 
   return (
@@ -113,7 +96,7 @@ export default function ChatWindow({ chat, profile, onUpdateMessages, onRenameCh
         <div>
           <h2 className="font-semibold text-gray-900 text-sm">{chat.name}</h2>
           <p className="text-xs text-gray-400">
-            {chat.messages.length} message{chat.messages.length !== 1 ? 's' : ''}
+            {messages === null ? 'Loading…' : `${messages.length} message${messages.length !== 1 ? 's' : ''}`}
           </p>
         </div>
         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
@@ -127,37 +110,33 @@ export default function ChatWindow({ chat, profile, onUpdateMessages, onRenameCh
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
-        {displayMessages.map(msg => (
-          <MessageBubble key={msg.id} message={msg} />
-        ))}
+        {messages === null ? (
+          <div className="flex justify-center pt-12">
+            <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          displayMessages.map(msg => <MessageBubble key={msg.id} message={msg} />)
+        )}
 
-        {/* Typing indicator */}
         {loading && (
           <div className="flex items-start gap-3">
             <AiAvatar />
             <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
               <div className="flex gap-1 items-center h-5">
-                {[0, 150, 300].map(delay => (
-                  <span
-                    key={delay}
-                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                    style={{ animationDelay: `${delay}ms` }}
-                  />
+                {[0, 150, 300].map(d => (
+                  <span key={d} className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: `${d}ms` }} />
                 ))}
               </div>
             </div>
           </div>
         )}
 
-        {/* Error */}
         {error && (
           <div className="flex justify-center">
             <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm max-w-lg text-center">
               <span className="font-medium">Error: </span>{error}
-              <button
-                onClick={() => setError(null)}
-                className="ml-3 text-red-500 hover:text-red-700 underline text-xs"
-              >
+              <button onClick={() => setError(null)} className="ml-3 text-red-500 hover:text-red-700 underline text-xs">
                 Dismiss
               </button>
             </div>
@@ -167,7 +146,7 @@ export default function ChatWindow({ chat, profile, onUpdateMessages, onRenameCh
         <div ref={bottomRef} />
       </div>
 
-      {/* Input area */}
+      {/* Input */}
       <div className="flex-shrink-0 border-t border-gray-200 px-4 pb-4 pt-3 bg-white">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-end gap-2 bg-gray-50 border border-gray-300 rounded-2xl px-4 py-2.5 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-300 transition-all">
@@ -176,16 +155,15 @@ export default function ChatWindow({ chat, profile, onUpdateMessages, onRenameCh
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              disabled={loading}
+              disabled={loading || messages === null}
               placeholder="Ask about treatments, side effects, clinical trials, or anything about Ewing's sarcoma…"
               rows={1}
               className="flex-1 bg-transparent outline-none resize-none text-sm text-gray-800 placeholder-gray-400 leading-relaxed"
             />
             <button
               onClick={handleSend}
-              disabled={!input.trim() || loading}
+              disabled={!input.trim() || loading || messages === null}
               className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 disabled:opacity-40 hover:bg-blue-700 transition-colors self-end mb-0.5"
-              title="Send (Enter)"
             >
               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -201,7 +179,7 @@ export default function ChatWindow({ chat, profile, onUpdateMessages, onRenameCh
   );
 }
 
-function AiAvatar() {
+export function AiAvatar() {
   return (
     <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
       <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -212,4 +190,3 @@ function AiAvatar() {
   );
 }
 
-export { AiAvatar };

@@ -1,0 +1,48 @@
+const express = require('express');
+const bcrypt  = require('bcryptjs');
+const jwt     = require('jsonwebtoken');
+const db      = require('../db');
+
+const router = express.Router();
+
+router.post('/register', async (req, res) => {
+  const { email, password } = req.body;
+  if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    return res.status(400).json({ error: 'A valid email address is required.' });
+  }
+  if (typeof password !== 'string' || password.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+  }
+  try {
+    const hash   = await bcrypt.hash(password, 12);
+    const result = db.createUser.run(email.toLowerCase().trim(), hash);
+    const token  = jwt.sign({ userId: result.lastInsertRowid }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user: { id: result.lastInsertRowid, email: email.toLowerCase().trim() } });
+  } catch (err) {
+    if (err.message?.includes('UNIQUE')) {
+      return res.status(409).json({ error: 'An account with this email already exists.' });
+    }
+    console.error('Register error:', err.message);
+    res.status(500).json({ error: 'Registration failed. Please try again.' });
+  }
+});
+
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
+  try {
+    const user = db.getUserByEmail.get(typeof email === 'string' ? email.toLowerCase().trim() : '');
+    // Use constant-time compare even when user not found to prevent timing attacks
+    const dummyHash = '$2a$12$invalidhashfortimingattackprevention000000000000000000';
+    const valid = user ? await bcrypt.compare(password, user.password_hash)
+                       : await bcrypt.compare(password, dummyHash).then(() => false);
+    if (!user || !valid) return res.status(401).json({ error: 'Invalid email or password.' });
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user: { id: user.id, email: user.email } });
+  } catch (err) {
+    console.error('Login error:', err.message);
+    res.status(500).json({ error: 'Login failed. Please try again.' });
+  }
+});
+
+module.exports = router;

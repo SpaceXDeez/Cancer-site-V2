@@ -1,81 +1,118 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import ChatSidebar from './components/ChatSidebar.jsx';
-import ChatWindow from './components/ChatWindow.jsx';
-import Questionnaire from './components/Questionnaire.jsx';
-
-function uid() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2);
-}
-
-function makeChat() {
-  return { id: uid(), name: 'New Chat', createdAt: new Date().toISOString(), messages: [] };
-}
-
-function loadJson(key, fallback) {
-  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
-  catch { return fallback; }
-}
+import { useAuth }    from './context/AuthContext.jsx';
+import HomePage       from './pages/HomePage.jsx';
+import ChatSidebar    from './components/ChatSidebar.jsx';
+import ChatWindow     from './components/ChatWindow.jsx';
+import Questionnaire  from './components/Questionnaire.jsx';
+import LoginModal     from './components/LoginModal.jsx';
 
 export default function App() {
-  const [profile, setProfile] = useState(() => loadJson('es_profile', {}));
-  const [chats, setChats]     = useState(() => loadJson('es_chats', []));
-  const [currentId, setCurrentId] = useState(() => localStorage.getItem('es_current') || null);
-  const [showQ, setShowQ]         = useState(false);
+  const { token, user, authFetch, logout } = useAuth();
+
+  const [profile, setProfile]   = useState({});
+  const [chats, setChats]       = useState([]);
+  const [currentId, setCurrentId] = useState(null);
+  const [view, setView]             = useState('home');
+  const [showQ, setShowQ]           = useState(false);
   const [isFirstVisit, setIsFirstVisit] = useState(false);
+  const [appLoading, setAppLoading]     = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
-  // First-visit detection
+  // Load profile + chats whenever the user logs in
   useEffect(() => {
-    if (!localStorage.getItem('es_visited')) {
-      setIsFirstVisit(true);
-      setShowQ(true);
+    if (!token) {
+      setProfile({});
+      setChats([]);
+      setCurrentId(null);
+      setView('home');
+      return;
     }
-  }, []);
-
-  // Persistence
-  useEffect(() => { localStorage.setItem('es_profile', JSON.stringify(profile)); }, [profile]);
-  useEffect(() => { localStorage.setItem('es_chats',   JSON.stringify(chats));   }, [chats]);
-  useEffect(() => { if (currentId) localStorage.setItem('es_current', currentId); }, [currentId]);
+    setAppLoading(true);
+    Promise.all([
+      authFetch('/api/profile').then(r => r.json()),
+      authFetch('/api/chats').then(r => r.json()),
+    ]).then(([profileData, chatsData]) => {
+      const loadedProfile = profileData.profile || {};
+      setProfile(loadedProfile);
+      const loadedChats = chatsData.chats || [];
+      setChats(loadedChats);
+      if (Object.keys(loadedProfile).length === 0) {
+        setIsFirstVisit(true);
+        setShowQ(true);
+      }
+      if (loadedChats.length > 0) {
+        setCurrentId(loadedChats[0].id);
+        setView('chat');
+      }
+    }).catch(console.error)
+      .finally(() => setAppLoading(false));
+  }, [token]);
 
   const currentChat = chats.find(c => c.id === currentId) || null;
 
-  const handleNewChat = useCallback(() => {
-    const chat = makeChat();
-    setChats(prev => [chat, ...prev]);
-    setCurrentId(chat.id);
-  }, []);
+  const handleNewChat = useCallback(async () => {
+    try {
+      const res  = await authFetch('/api/chats', { method: 'POST', body: JSON.stringify({ name: 'New Chat' }) });
+      const data = await res.json();
+      setChats(prev => [data.chat, ...prev]);
+      setCurrentId(data.chat.id);
+      setView('chat');
+    } catch (err) { console.error(err); }
+  }, [authFetch]);
 
-  const handleDeleteChat = useCallback((id) => {
-    setChats(prev => {
-      const next = prev.filter(c => c.id !== id);
-      if (currentId === id) {
-        setCurrentId(next.length > 0 ? next[0].id : null);
-      }
-      return next;
-    });
-  }, [currentId]);
+  const handleDeleteChat = useCallback(async (id) => {
+    try {
+      await authFetch(`/api/chats/${id}`, { method: 'DELETE' });
+      setChats(prev => {
+        const next = prev.filter(c => c.id !== id);
+        if (currentId === id) setCurrentId(next.length > 0 ? next[0].id : null);
+        return next;
+      });
+    } catch (err) { console.error(err); }
+  }, [authFetch, currentId]);
 
-  const handleRenameChat = useCallback((id, name) => {
-    setChats(prev => prev.map(c => c.id === id ? { ...c, name } : c));
-  }, []);
+  const handleRenameChat = useCallback(async (id, name) => {
+    try {
+      await authFetch(`/api/chats/${id}`, { method: 'PUT', body: JSON.stringify({ name }) });
+      setChats(prev => prev.map(c => c.id === id ? { ...c, name } : c));
+    } catch (err) { console.error(err); }
+  }, [authFetch]);
 
-  const handleUpdateMessages = useCallback((chatId, messages) => {
-    setChats(prev => prev.map(c => c.id === chatId ? { ...c, messages } : c));
-  }, []);
+  const handleSaveProfile = useCallback(async (newProfile) => {
+    try {
+      await authFetch('/api/profile', { method: 'PUT', body: JSON.stringify({ profile: newProfile }) });
+      setProfile(newProfile);
+      setShowQ(false);
+      setIsFirstVisit(false);
+      if (chats.length === 0) handleNewChat();
+    } catch (err) { console.error(err); }
+  }, [authFetch, chats.length, handleNewChat]);
 
-  const handleSaveProfile = useCallback((newProfile) => {
-    setProfile(newProfile);
-    localStorage.setItem('es_visited', '1');
-    setShowQ(false);
-    setIsFirstVisit(false);
-    setChats(prev => {
-      if (prev.length === 0) {
-        const chat = makeChat();
-        setCurrentId(chat.id);
-        return [chat];
-      }
-      return prev;
-    });
-  }, []);
+  // Logged-out: show home page with login modal
+  if (!token) {
+    return (
+      <div className="flex h-screen overflow-hidden">
+        <HomePage
+          isLoggedIn={false}
+          user={null}
+          onLoginClick={() => setShowLoginModal(true)}
+          onStartChat={() => setShowLoginModal(true)}
+        />
+        {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
+      </div>
+    );
+  }
+
+  if (appLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-900">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-slate-400 text-sm">Loading…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -83,20 +120,33 @@ export default function App() {
         chats={chats}
         currentChatId={currentId}
         profile={profile}
+        user={user}
+        view={view}
         onNewChat={handleNewChat}
-        onSelectChat={setCurrentId}
+        onSelectChat={(id) => { setCurrentId(id); setView('chat'); }}
         onDeleteChat={handleDeleteChat}
         onRenameChat={handleRenameChat}
         onOpenProfile={() => setShowQ(true)}
+        onLogout={logout}
+        onSetView={setView}
       />
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        {currentChat ? (
+        {view === 'home' ? (
+          <HomePage
+            isLoggedIn={true}
+            user={user}
+            onLoginClick={null}
+            onStartChat={() => {
+              if (currentChat) setView('chat');
+              else handleNewChat();
+            }}
+          />
+        ) : currentChat ? (
           <ChatWindow
             key={currentChat.id}
             chat={currentChat}
-            profile={profile}
-            onUpdateMessages={(msgs) => handleUpdateMessages(currentChat.id, msgs)}
+            authFetch={authFetch}
             onRenameChat={(name) => handleRenameChat(currentChat.id, name)}
           />
         ) : (
@@ -122,7 +172,8 @@ function EmptyState({ onNewChat }) {
       <div className="text-center max-w-sm px-6">
         <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-blue-100">
           <svg className="w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
         </div>
         <h2 className="text-xl font-semibold text-gray-900 mb-2">Start a conversation</h2>
@@ -139,3 +190,4 @@ function EmptyState({ onNewChat }) {
     </div>
   );
 }
+

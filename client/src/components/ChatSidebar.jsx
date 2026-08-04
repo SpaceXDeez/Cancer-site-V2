@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 
 export default function ChatSidebar({
-  chats, currentChatId, profile,
-  onNewChat, onSelectChat, onDeleteChat, onRenameChat, onOpenProfile,
+  chats, currentChatId, profile, user, view,
+  onNewChat, onSelectChat, onDeleteChat, onRenameChat, onOpenProfile, onLogout, onSetView,
 }) {
   const [renamingId, setRenamingId] = useState(null);
   const [renameVal, setRenameVal]   = useState('');
@@ -41,8 +41,24 @@ export default function ChatSidebar({
         </div>
       </div>
 
+      {/* Nav */}
+      <div className="px-3 pt-3 pb-1 space-y-1">
+        <button
+          onClick={() => onSetView('home')}
+          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+            view === 'home' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+          }`}
+        >
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          XIT Home
+        </button>
+      </div>
+
       {/* New chat */}
-      <div className="px-3 pt-3 pb-1">
+      <div className="px-3 pt-1 pb-1">
         <button
           onClick={onNewChat}
           className="w-full flex items-center justify-center gap-1.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
@@ -127,8 +143,8 @@ export default function ChatSidebar({
         )}
       </div>
 
-      {/* Profile button */}
-      <div className="px-3 py-3 border-t border-slate-700/60">
+      {/* Profile + logout */}
+      <div className="px-3 py-3 border-t border-slate-700/60 space-y-1">
         <button
           onClick={onOpenProfile}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition-colors group"
@@ -148,6 +164,17 @@ export default function ChatSidebar({
           <svg className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
+        </button>
+
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-slate-800 transition-colors text-xs"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span className="truncate">{user?.email || 'Sign out'}</span>
         </button>
       </div>
     </aside>

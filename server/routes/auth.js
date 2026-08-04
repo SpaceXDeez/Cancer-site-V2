@@ -15,11 +15,12 @@ router.post('/register', async (req, res) => {
   }
   try {
     const hash   = await bcrypt.hash(password, 12);
-    const result = db.createUser.run(email.toLowerCase().trim(), hash);
-    const token  = jwt.sign({ userId: result.lastInsertRowid }, process.env.JWT_SECRET, { expiresIn: '30d' });
-    res.json({ token, user: { id: result.lastInsertRowid, email: email.toLowerCase().trim() } });
+    const result = await db.createUser(email.toLowerCase().trim(), hash);
+    const userId = result.lastInsertRowid;
+    const token  = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user: { id: userId, email: email.toLowerCase().trim() } });
   } catch (err) {
-    if (err.message?.includes('UNIQUE')) {
+    if (err.message?.includes('UNIQUE') || err.code === '23505') {
       return res.status(409).json({ error: 'An account with this email already exists.' });
     }
     console.error('Register error:', err.message);
@@ -31,8 +32,8 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
   try {
-    const user = db.getUserByEmail.get(typeof email === 'string' ? email.toLowerCase().trim() : '');
-    // Use constant-time compare even when user not found to prevent timing attacks
+    const user = await db.getUserByEmail(typeof email === 'string' ? email.toLowerCase().trim() : '');
+    // Constant-time compare even when user not found to prevent timing attacks
     const dummyHash = '$2a$12$invalidhashfortimingattackprevention000000000000000000';
     const valid = user ? await bcrypt.compare(password, user.password_hash)
                        : await bcrypt.compare(password, dummyHash).then(() => false);
@@ -46,3 +47,4 @@ router.post('/login', async (req, res) => {
 });
 
 module.exports = router;
+

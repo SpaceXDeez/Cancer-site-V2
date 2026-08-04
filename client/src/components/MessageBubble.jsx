@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AiAvatar } from './ChatWindow.jsx';
 
 export default function MessageBubble({ message }) {
   const isUser = message.role === 'user';
-  const time = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const ts  = message.created_at || message.timestamp;
+  const time = ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
   if (isUser) {
     return (
@@ -19,15 +20,47 @@ export default function MessageBubble({ message }) {
   }
 
   return (
-    <div className="flex items-start gap-3 max-w-3xl">
+    <div className="flex items-start gap-3 max-w-3xl group">
       <AiAvatar />
       <div className="flex-1 min-w-0">
-        <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
+        <div className="relative bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
           <MarkdownContent content={message.content} />
+          <CopyButton text={message.content} />
         </div>
         <p className="text-xs text-gray-400 mt-1 pl-1">{time}</p>
       </div>
     </div>
+  );
+}
+
+// ── Copy button ────────────────────────────────────────────────────────────────
+function CopyButton({ text }) {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      title={copied ? 'Copied!' : 'Copy response'}
+      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg bg-white/80 hover:bg-white text-gray-500 hover:text-gray-800 shadow-sm border border-gray-200"
+    >
+      {copied ? (
+        <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+        </svg>
+      ) : (
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+      )}
+    </button>
   );
 }
 

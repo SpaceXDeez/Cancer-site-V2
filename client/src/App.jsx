@@ -146,6 +146,7 @@ export default function App() {
           <ChatWindow
             key={currentChat.id}
             chat={currentChat}
+            profile={profile}
             authFetch={authFetch}
             onRenameChat={(name) => handleRenameChat(currentChat.id, name)}
           />

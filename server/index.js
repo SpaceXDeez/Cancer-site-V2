@@ -1,23 +1,66 @@
 require('dotenv').config();
 const express   = require('express');
 const cors      = require('cors');
+const path      = require('path');
+const helmet    = require('helmet');
+const rateLimit = require('express-rate-limit');
 const Anthropic = require('@anthropic-ai/sdk');
 
-const app  = express();
-const PORT = process.env.PORT || 3001;
-
 if (!process.env.ANTHROPIC_API_KEY) {
-  console.error('ERROR: ANTHROPIC_API_KEY is not set in server/.env');
+  console.error('ERROR: ANTHROPIC_API_KEY is not set');
   process.exit(1);
 }
 if (!process.env.JWT_SECRET) {
-  console.error('ERROR: JWT_SECRET is not set in server/.env');
+  console.error('ERROR: JWT_SECRET is not set');
   process.exit(1);
 }
 
-app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:4173'] }));
+const app  = express();
+const PORT = process.env.PORT || 3001;
+const isProd = process.env.NODE_ENV === 'production';
+
+// ── Security headers ──────────────────────────────────────────────────────────
+app.use(helmet({
+  contentSecurityPolicy: isProd ? undefined : false, // relax CSP in dev for Vite HMR
+}));
+
+// ── CORS ──────────────────────────────────────────────────────────────────────
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:4173',
+  ...(process.env.CLIENT_ORIGIN ? [process.env.CLIENT_ORIGIN] : []),
+];
+app.use(cors({
+  origin: (origin, cb) => {
+    // allow non-browser requests (curl, Postman) or known origins
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    cb(new Error(`CORS: origin ${origin} not allowed`));
+  },
+}));
+
 app.use(express.json({ limit: '2mb' }));
 
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+// Global limiter — protect all endpoints
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+}));
+
+// Stricter limiter on the AI chat endpoint (costs money and CPU)
+const chatLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Chat rate limit reached. Please wait a moment.' },
+});
+
+// ── App modules ───────────────────────────────────────────────────────────────
 const anthropic   = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const db          = require('./db');
 const requireAuth = require('./middleware/auth');
@@ -132,25 +175,25 @@ All information I provide is AI-generated and for educational purposes only. Tre
 }
 
 // ── AI chat endpoint ───────────────────────────────────────────────────────────
-app.post('/api/chat', requireAuth, async (req, res) => {
+app.post('/api/chat', requireAuth, chatLimiter, async (req, res) => {
   try {
     const { chatId, content } = req.body;
     if (!chatId || typeof content !== 'string' || !content.trim()) {
       return res.status(400).json({ error: 'chatId and content are required.' });
     }
 
-    const chat = db.getChatById.get(chatId, req.user.userId);
+    const chat = await db.getChatById(chatId, req.user.userId);
     if (!chat) return res.status(404).json({ error: 'Chat not found.' });
 
-    const profileRow = db.getProfile.get(req.user.userId);
+    const profileRow = await db.getProfile(req.user.userId);
     const profile    = profileRow ? JSON.parse(profileRow.data) : {};
-    const history    = db.getMessages.all(chatId);
+    const history    = await db.getMessages(chatId);
 
     if (history.length > 200) {
       return res.status(400).json({ error: 'Conversation is too long. Please start a new chat.' });
     }
 
-    db.insertMessage.run(chatId, 'user', content.trim());
+    await db.insertMessage(chatId, 'user', content.trim());
 
     const claudeMessages = [
       ...history.map(m => ({ role: m.role, content: m.content })),
@@ -165,7 +208,7 @@ app.post('/api/chat', requireAuth, async (req, res) => {
     });
 
     const aiContent = response.content[0].text;
-    db.insertMessage.run(chatId, 'assistant', aiContent);
+    await db.insertMessage(chatId, 'assistant', aiContent);
 
     res.json({ content: aiContent });
   } catch (err) {
@@ -179,5 +222,20 @@ app.post('/api/chat', requireAuth, async (req, res) => {
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
-app.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`));
+// ── Serve React app in production ─────────────────────────────────────────────
+if (isProd) {
+  const distPath = path.join(__dirname, '../client/dist');
+  app.use(express.static(distPath));
+  app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
+}
+
+// ── Start server after DB is ready ────────────────────────────────────────────
+db.initDb()
+  .then(() => {
+    app.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`));
+  })
+  .catch(err => {
+    console.error('Failed to initialize database:', err.message);
+    process.exit(1);
+  });
 

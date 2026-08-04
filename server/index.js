@@ -31,13 +31,13 @@ const allowedOrigins = [
   'http://localhost:4173',
   ...(process.env.CLIENT_ORIGIN ? [process.env.CLIENT_ORIGIN] : []),
 ];
-app.use(cors({
+// CORS only needed for API routes (cross-origin dev) — static files are same-origin in prod
+const corsMiddleware = cors({
   origin: (origin, cb) => {
-    // allow non-browser requests (curl, Postman) or known origins
     if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
     cb(new Error(`CORS: origin ${origin} not allowed`));
   },
-}));
+});
 
 app.use(express.json({ limit: '2mb' }));
 
@@ -64,6 +64,8 @@ const chatLimiter = rateLimit({
 const anthropic   = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const db          = require('./db');
 const requireAuth = require('./middleware/auth');
+
+app.use('/api', corsMiddleware);
 
 app.use('/api/auth',    require('./routes/auth'));
 app.use('/api/profile', require('./routes/profile'));

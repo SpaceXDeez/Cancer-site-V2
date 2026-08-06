@@ -139,6 +139,16 @@ const db = {
     if (IS_PG) return pgGet(q, [id]);
     return sqGet(q, [id]);
   },
+  async deleteAllChats(userId) {
+    const q = 'DELETE FROM chats WHERE user_id = ?';
+    if (IS_PG) return pgRun(q, [userId]);
+    return sqRun(q, [userId]);
+  },
+  async updatePasswordHash(userId, hash) {
+    const q = 'UPDATE users SET password_hash = ? WHERE id = ?';
+    if (IS_PG) return pgRun(q, [hash, userId]);
+    return sqRun(q, [hash, userId]);
+  },
   async deleteUser(id) {
     const q = 'DELETE FROM users WHERE id = ?';
     if (IS_PG) return pgRun(q, [id]);

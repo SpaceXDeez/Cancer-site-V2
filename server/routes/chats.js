@@ -54,6 +54,17 @@ router.patch('/:id', requireAuth, async (req, res) => {
   }
 });
 
+// DELETE /api/chats — delete ALL chats for the authenticated user
+router.delete('/', requireAuth, async (req, res) => {
+  try {
+    await db.deleteAllChats(req.user.userId);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Delete all chats error:', err.message);
+    res.status(500).json({ error: 'Failed to delete chats.' });
+  }
+});
+
 // DELETE /api/chats/:id — delete a chat (and its messages via CASCADE)
 router.delete('/:id', requireAuth, async (req, res) => {
   try {

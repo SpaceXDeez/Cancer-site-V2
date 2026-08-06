@@ -47,6 +47,27 @@ router.post('/login', async (req, res) => {
   }
 });
 
+router.post('/password', requireAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (typeof newPassword !== 'string' || newPassword.length < 8) {
+    return res.status(400).json({ error: 'New password must be at least 8 characters.' });
+  }
+  try {
+    const user = await db.getUserByEmail(
+      (await db.getUserById(req.user.userId))?.email || ''
+    );
+    if (!user) return res.status(401).json({ error: 'Account not found.' });
+    const valid = await bcrypt.compare(currentPassword ?? '', user.password_hash);
+    if (!valid) return res.status(401).json({ error: 'Current password is incorrect.' });
+    const hash = await bcrypt.hash(newPassword, 12);
+    await db.updatePasswordHash(req.user.userId, hash);
+    res.json({ message: 'Password updated.' });
+  } catch (err) {
+    console.error('Change password error:', err.message);
+    res.status(500).json({ error: 'Failed to update password. Please try again.' });
+  }
+});
+
 router.delete('/account', requireAuth, async (req, res) => {
   try {
     await db.deleteUser(req.user.userId);

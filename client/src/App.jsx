@@ -5,6 +5,7 @@ import ChatSidebar    from './components/ChatSidebar.jsx';
 import ChatWindow     from './components/ChatWindow.jsx';
 import Questionnaire  from './components/Questionnaire.jsx';
 import LoginModal     from './components/LoginModal.jsx';
+import SettingsModal  from './components/SettingsModal.jsx';
 
 export default function App() {
   const { token, user, authFetch, logout } = useAuth();
@@ -18,6 +19,7 @@ export default function App() {
   const [appLoading, setAppLoading]     = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [sidebarOpen, setSidebarOpen]       = useState(false);
+  const [showSettings, setShowSettings]     = useState(false);
 
   // Load profile + chats whenever the user logs in
   useEffect(() => {
@@ -108,6 +110,22 @@ export default function App() {
     logout();
   }, [authFetch, logout]);
 
+  const handleDeleteAllChats = useCallback(async () => {
+    try {
+      await authFetch('/api/chats', { method: 'DELETE' });
+      setChats([]);
+      setCurrentId(null);
+    } catch (err) { console.error(err); }
+  }, [authFetch]);
+
+  const handleSaveSettings = useCallback(async (newSettings) => {
+    const merged = { ...profile, _settings: newSettings };
+    try {
+      await authFetch('/api/profile', { method: 'PUT', body: JSON.stringify({ profile: merged }) });
+      setProfile(merged);
+    } catch (err) { console.error(err); }
+  }, [authFetch, profile]);
+
   // Logged-out: show home page with login modal
   if (!token) {
     return (
@@ -170,6 +188,7 @@ export default function App() {
         onOpenProfile={() => { setShowQ(true); closeSidebar(); }}
         onLogout={logout}
         onDeleteAccount={handleDeleteAccount}
+        onOpenSettings={() => { setShowSettings(true); closeSidebar(); }}
         onSetView={(v) => { setView(v); closeSidebar(); }}
         onCloseSidebar={closeSidebar}
       />
@@ -205,6 +224,18 @@ export default function App() {
           isFirstVisit={isFirstVisit}
           onSave={handleSaveProfile}
           onClose={isFirstVisit ? null : () => setShowQ(false)}
+        />
+      )}
+
+      {showSettings && (
+        <SettingsModal
+          user={user}
+          profile={profile}
+          authFetch={authFetch}
+          onSave={handleSaveSettings}
+          onDeleteAllChats={handleDeleteAllChats}
+          onDeleteAccount={handleDeleteAccount}
+          onClose={() => setShowSettings(false)}
         />
       )}
     </div>

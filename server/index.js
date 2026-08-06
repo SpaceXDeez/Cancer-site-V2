@@ -194,7 +194,18 @@ function buildPatientContext(profile) {
 }
 
 function buildSystemPrompt(profile) {
-  return `You are an AI assistant specializing in Ewing's sarcoma, created to help patients and families battling this disease. Introduce yourself as an AI-based support tool for Ewing's sarcoma patients and families on your first message in a new conversation.
+  const settings = profile?._settings || {};
+
+  const styleNote = {
+    supportive: '\n\nCOMMUNICATION STYLE: Use warm, empathetic, accessible language. Minimise jargon. Prioritise emotional support alongside clinical information.',
+    clinical:   '\n\nCOMMUNICATION STYLE: Use precise medical terminology and provide comprehensive clinical detail. The reader is medically literate and prefers thorough technical information.',
+  }[settings.aiStyle] || '';
+
+  const customNote = settings.customInstructions?.trim()
+    ? `\n\nADDITIONAL USER INSTRUCTIONS: ${settings.customInstructions.trim()}`
+    : '';
+
+  return `You are an AI assistant specialising in Ewing's sarcoma, created to help patients and families battling this disease. Introduce yourself as an AI-based support tool for Ewing's sarcoma patients and families on your first message in a new conversation.
 
 You are knowledgeable about:
 - Ewing's sarcoma biology, diagnosis, staging, and pathology (EWSR1 fusions, histology, PET/CT/MRI imaging interpretation)
@@ -211,7 +222,7 @@ You are knowledgeable about:
 When the patient profile is provided, tailor all responses using that information.
 
 CRITICAL DISCLAIMER — include a brief reminder in every response:
-All information I provide is AI-generated and for educational purposes only. Treatment decisions must always be made in partnership with the patient's medical oncology team.${buildPatientContext(profile)}`;
+All information I provide is AI-generated and for educational purposes only. Treatment decisions must always be made in partnership with the patient's medical oncology team.${buildPatientContext(profile)}${styleNote}${customNote}`;
 }
 
 // ── AI chat endpoint ───────────────────────────────────────────────────────────
@@ -294,6 +305,22 @@ app.post('/api/chat', requireAuth, chatLimiter, async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+
+// ── Data export ───────────────────────────────────────────────────────────────
+app.get('/api/export', requireAuth, async (req, res) => {
+  try {
+    const profileRow = await db.getProfile(req.user.userId);
+    const profile    = profileRow ? JSON.parse(profileRow.data) : {};
+    const chats      = await db.getChats(req.user.userId);
+    const chatData   = await Promise.all(
+      chats.map(async c => ({ ...c, messages: await db.getMessages(c.id) }))
+    );
+    res.json({ exportedAt: new Date().toISOString(), profile, chats: chatData });
+  } catch (err) {
+    console.error('Export error:', err.message);
+    res.status(500).json({ error: 'Failed to export data.' });
+  }
+});
 
 // ── File upload → text extraction ─────────────────────────────────────────────
 app.post('/api/upload', requireAuth, dailyUploadLimiter, uploadLimiter, (req, res, next) => {

@@ -92,6 +92,15 @@ export default function App() {
     } catch (err) { console.error(err); }
   }, [authFetch, chats.length, handleNewChat]);
 
+  const handleUpdateProfile = useCallback(async (updates) => {
+    const merged = { ...profile, ...updates };
+    try {
+      const res = await authFetch('/api/profile', { method: 'PUT', body: JSON.stringify({ profile: merged }) });
+      if (!res.ok) throw new Error(`Failed to update profile (${res.status})`);
+      setProfile(merged);
+    } catch (err) { console.error(err); }
+  }, [authFetch, profile]);
+
   // Logged-out: show home page with login modal
   if (!token) {
     return (
@@ -175,6 +184,7 @@ export default function App() {
             profile={profile}
             authFetch={authFetch}
             onRenameChat={(name) => handleRenameChat(currentChat.id, name)}
+            onUpdateProfile={handleUpdateProfile}
           />
         ) : (
           <EmptyState onNewChat={handleNewChat} />

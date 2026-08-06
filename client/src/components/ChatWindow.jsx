@@ -27,14 +27,16 @@ If you've filled out the patient profile (click the profile button in the sideba
 
 How can I help you today?`;
 
-export default function ChatWindow({ chat, profile, authFetch, onRenameChat }) {
+export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onUpdateProfile }) {
   const [messages, setMessages] = useState(null);
   const [input, setInput]       = useState('');
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState(null);
-  const [attachment, setAttachment]   = useState(null); // { name, text }
-  const [uploading, setUploading]     = useState(false);
-  const [uploadError, setUploadError] = useState(null);
+  const [attachment, setAttachment]         = useState(null);
+  const [uploading, setUploading]           = useState(false);
+  const [uploadError, setUploadError]       = useState(null);
+  const [profileSuggestion, setProfileSuggestion] = useState(null); // { description, fields }
+  const [savingProfile, setSavingProfile]   = useState(false);
   const bottomRef    = useRef(null);
   const textareaRef  = useRef(null);
   const fileInputRef = useRef(null);
@@ -114,6 +116,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat }) {
       setMessages(prev => [...(prev || []), {
         id: `ai-${Date.now()}`, role: 'assistant', content: data.content, created_at: new Date().toISOString(),
       }]);
+      if (data.contextSuggestion) setProfileSuggestion(data.contextSuggestion);
     } catch (err) {
       setError(err.message);
       setMessages(prev => (prev || []).filter(m => m.id !== optimistic.id));
@@ -253,6 +256,42 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat }) {
 
         <div ref={bottomRef} />
       </div>
+
+      {/* Profile update suggestion */}
+      {profileSuggestion && (
+        <div className="flex-shrink-0 bg-indigo-50 border-t border-indigo-200 px-4 py-2.5">
+          <div className="max-w-3xl mx-auto flex items-start gap-3">
+            <svg className="w-4 h-4 text-indigo-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-indigo-800 font-medium">Profile update detected</p>
+              <p className="text-xs text-indigo-600 mt-0.5 leading-relaxed">{profileSuggestion.description}</p>
+            </div>
+            <div className="flex gap-2 flex-shrink-0">
+              <button
+                disabled={savingProfile}
+                onClick={async () => {
+                  setSavingProfile(true);
+                  await onUpdateProfile(profileSuggestion.fields);
+                  setProfileSuggestion(null);
+                  setSavingProfile(false);
+                }}
+                className="text-xs px-3 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+              >
+                {savingProfile ? 'Saving…' : 'Save to profile'}
+              </button>
+              <button
+                onClick={() => setProfileSuggestion(null)}
+                className="text-xs px-3 py-1 text-indigo-600 hover:text-indigo-800 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Input */}
       <div className="flex-shrink-0 border-t border-gray-200 px-4 pb-4 pt-3 bg-white">

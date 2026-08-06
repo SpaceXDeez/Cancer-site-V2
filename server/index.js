@@ -230,9 +230,42 @@ app.post('/api/chat', requireAuth, chatLimiter, async (req, res) => {
     });
 
     const aiContent = response.content[0].text;
-    await db.insertMessage(chatId, 'assistant', aiContent);
 
-    res.json({ content: aiContent });
+    // Run DB write and context extraction in parallel — extraction never blocks the response
+    const userMsgCount = history.filter(m => m.role === 'user').length + 1; // +1 for this message
+    const shouldExtract = userMsgCount >= 2 && userMsgCount % 4 === 0;
+
+    const [, extractResult] = await Promise.allSettled([
+      db.insertMessage(chatId, 'assistant', aiContent),
+      shouldExtract ? (async () => {
+        const snippet = [...claudeMessages, { role: 'assistant', content: aiContent }]
+          .slice(-12) // last 12 messages is plenty
+          .map(m => `${m.role === 'user' ? 'User' : 'AI'}: ${m.content.slice(0, 600)}`)
+          .join('\n\n');
+        const knownFields = JSON.stringify(profile, null, 2);
+        return anthropic.messages.create({
+          model: 'claude-opus-4-5',
+          max_tokens: 300,
+          system: 'You extract new factual patient information from a conversation. Respond ONLY with a valid JSON object, no prose.',
+          messages: [{
+            role: 'user',
+            content: `Current patient profile:\n${knownFields}\n\nConversation:\n${snippet}\n\nExtract any NEW patient facts mentioned in the conversation that are not already in the profile. Focus on: patientName, age, sex, location, primaryTumorSite, diagnosisDate, treatmentPhase, cyclesCompleted, currentStatus, oncologistName, treatingInstitution, currentMedications, currentSymptoms, mainConcerns.\n\nReturn {"hasUpdates":false} if nothing new, or {"hasUpdates":true,"description":"one sentence summary","fields":{"key":"value",...}} if new info found.`,
+          }],
+        });
+      })() : Promise.resolve(null),
+    ]);
+
+    let contextSuggestion = null;
+    if (extractResult.status === 'fulfilled' && extractResult.value) {
+      try {
+        const parsed = JSON.parse(extractResult.value.content[0].text);
+        if (parsed.hasUpdates && parsed.fields && Object.keys(parsed.fields).length > 0) {
+          contextSuggestion = { description: parsed.description, fields: parsed.fields };
+        }
+      } catch { /* ignore malformed JSON */ }
+    }
+
+    res.json({ content: aiContent, contextSuggestion });
   } catch (err) {
     console.error('Claude API error:', err?.status, err?.message);
     if (err?.status === 401) return res.status(401).json({ error: 'Invalid API key.' });

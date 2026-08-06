@@ -6,7 +6,8 @@ export default function AuthForm({ onSuccess, compact = false }) {
   const { saveAuth } = useAuth();
   const [mode, setMode]         = useState('login');
   const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState('');\n  // Only expose test-account option when URL contains ?dev
+  const showDevOption = new URLSearchParams(window.location.search).has('dev');
   const [isTest, setIsTest]     = useState(false);
   const [error, setError]       = useState(null);
   const [loading, setLoading]   = useState(false);
@@ -73,7 +74,7 @@ export default function AuthForm({ onSuccess, compact = false }) {
           />
         </div>
 
-        {mode === 'register' && (
+        {mode === 'register' && showDevOption && (
           <label className="flex items-start gap-2.5 cursor-pointer select-none">
             <input
               type="checkbox"

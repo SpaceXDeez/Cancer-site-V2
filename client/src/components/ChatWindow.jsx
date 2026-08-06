@@ -89,7 +89,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
     if ((!trimmed && !attachment) || loading || messages === null) return;
 
     const content = attachment
-      ? `[Attached: ${attachment.name}]\n\n${attachment.text}${trimmed ? `\n\n${trimmed}` : ''}`
+      ? `[Attached: ${attachment.name}]${trimmed ? `\n\n${trimmed}` : ''}`
       : trimmed;
     const optimistic = { id: `tmp-${Date.now()}`, role: 'user', content, created_at: new Date().toISOString() };
     setMessages(prev => [...(prev || []), optimistic]);

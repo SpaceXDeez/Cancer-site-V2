@@ -49,12 +49,14 @@ export default function App() {
       .finally(() => setAppLoading(false));
   }, [token]);
 
-  const currentChat = chats.find(c => c.id === currentId) || null;
+  const currentChat = chats.find(c => c && c.id === currentId) || null;
 
   const handleNewChat = useCallback(async () => {
     try {
       const res  = await authFetch('/api/chats', { method: 'POST', body: JSON.stringify({ name: 'New Chat' }) });
+      if (!res.ok) throw new Error(`Failed to create chat (${res.status})`);
       const data = await res.json();
+      if (!data.chat?.id) throw new Error('Unexpected response from server');
       setChats(prev => [data.chat, ...prev]);
       setCurrentId(data.chat.id);
       setView('chat');
@@ -81,7 +83,8 @@ export default function App() {
 
   const handleSaveProfile = useCallback(async (newProfile) => {
     try {
-      await authFetch('/api/profile', { method: 'PUT', body: JSON.stringify({ profile: newProfile }) });
+      const res = await authFetch('/api/profile', { method: 'PUT', body: JSON.stringify({ profile: newProfile }) });
+      if (!res.ok) throw new Error(`Failed to save profile (${res.status})`);
       setProfile(newProfile);
       setShowQ(false);
       setIsFirstVisit(false);

@@ -128,6 +128,11 @@ const db = {
     if (IS_PG) return pgGet(q + ' LIMIT 1', [email.toLowerCase()]);
     return sqGet(q, [email]);
   },
+  async getUserById(id) {
+    const q = 'SELECT id FROM users WHERE id = ?';
+    if (IS_PG) return pgGet(q, [id]);
+    return sqGet(q, [id]);
+  },
 
   // Profiles
   async upsertProfile(userId, data) {

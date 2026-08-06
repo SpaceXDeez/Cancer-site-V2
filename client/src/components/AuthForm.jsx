@@ -6,7 +6,8 @@ export default function AuthForm({ onSuccess, compact = false }) {
   const { saveAuth } = useAuth();
   const [mode, setMode]         = useState('login');
   const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');\n  // Only expose test-account option when URL contains ?dev
+  const [password, setPassword] = useState('');
+  // Only expose test-account option when URL contains ?dev
   const showDevOption = new URLSearchParams(window.location.search).has('dev');
   const [isTest, setIsTest]     = useState(false);
   const [error, setError]       = useState(null);

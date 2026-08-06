@@ -1,17 +1,32 @@
 import React, { useState } from 'react';
 import { AiAvatar } from './ChatWindow.jsx';
 
+// Parse out [Attached: filename] prefix so it renders as a styled card
+function parseAttachment(content) {
+  const match = content.match(/^\[Attached: (.+?)\]\n\n([\s\S]*?)(?:\n\n([\s\S]+))?$/);
+  if (!match) return null;
+  return { filename: match[1], extractedText: match[2], userText: match[3] || '' };
+}
+
 export default function MessageBubble({ message }) {
   const isUser = message.role === 'user';
   const ts  = message.created_at || message.timestamp;
   const time = ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
   if (isUser) {
+    const att = parseAttachment(message.content);
     return (
       <div className="flex justify-end">
-        <div className="max-w-2xl">
-          <div className="bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-3">
-            <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+        <div className="max-w-2xl w-full">
+          <div className="bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 space-y-2">
+            {att ? (
+              <>
+                <AttachmentCard filename={att.filename} extractedText={att.extractedText} />
+                {att.userText && <p className="text-sm whitespace-pre-wrap leading-relaxed">{att.userText}</p>}
+              </>
+            ) : (
+              <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+            )}
           </div>
           <p className="text-xs text-gray-400 mt-1 text-right pr-1">{time}</p>
         </div>
@@ -29,6 +44,30 @@ export default function MessageBubble({ message }) {
         </div>
         <p className="text-xs text-gray-400 mt-1 pl-1">{time}</p>
       </div>
+    </div>
+  );
+}
+
+// ── Attachment card (shown inside user messages) ───────────────────────────────
+function AttachmentCard({ filename, extractedText }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="bg-blue-500/40 rounded-xl px-3 py-2 text-xs">
+      <div className="flex items-center gap-1.5 font-medium">
+        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <span className="truncate">{filename}</span>
+        <button onClick={() => setExpanded(v => !v)} className="ml-auto flex-shrink-0 opacity-70 hover:opacity-100">
+          {expanded ? '▲ Hide' : '▼ Show text'}
+        </button>
+      </div>
+      {expanded && (
+        <pre className="mt-2 max-h-48 overflow-y-auto whitespace-pre-wrap font-sans opacity-90 leading-relaxed border-t border-blue-400/40 pt-2">
+          {extractedText}
+        </pre>
+      )}
     </div>
   );
 }

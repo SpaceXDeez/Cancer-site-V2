@@ -60,6 +60,26 @@ const chatLimiter = rateLimit({
   message: { error: 'Chat rate limit reached. Please wait a moment.' },
 });
 
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Upload rate limit reached. Please wait a moment.' },
+});
+
+// ── File upload (memory storage — no files written to disk) ───────────────────
+const multer = require('multer');
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (allowed.includes(file.mimetype)) return cb(null, true);
+    cb(Object.assign(new Error('Unsupported file type. Upload a PDF, JPG, PNG, or WebP.'), { status: 400 }));
+  },
+});
+
 // ── App modules ───────────────────────────────────────────────────────────────
 const anthropic   = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const db          = require('./db');
@@ -223,6 +243,46 @@ app.post('/api/chat', requireAuth, chatLimiter, async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+
+// ── File upload → text extraction ─────────────────────────────────────────────
+app.post('/api/upload', requireAuth, uploadLimiter, (req, res, next) => {
+  upload.single('file')(req, res, err => {
+    if (err?.code === 'LIMIT_FILE_SIZE') return res.status(400).json({ error: 'File too large. Maximum size is 20 MB.' });
+    if (err) return res.status(400).json({ error: err.message });
+    next();
+  });
+}, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file provided.' });
+    const { mimetype, buffer, originalname } = req.file;
+    let text = '';
+
+    if (mimetype === 'application/pdf') {
+      const pdfParse = require('pdf-parse');
+      const parsed = await pdfParse(buffer);
+      text = parsed.text.trim();
+      if (!text) return res.status(422).json({ error: 'No readable text found in this PDF.' });
+    } else {
+      const response = await anthropic.messages.create({
+        model: 'claude-opus-4-5',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mimetype, data: buffer.toString('base64') } },
+            { type: 'text', text: 'This is a medical document or test result. Extract and transcribe all visible text, values, labels, dates, and units. Preserve the structure as closely as possible.' },
+          ],
+        }],
+      });
+      text = response.content[0].text.trim();
+    }
+
+    res.json({ text, filename: originalname });
+  } catch (err) {
+    console.error('Upload error:', err.message);
+    res.status(500).json({ error: 'Failed to process file. Please try again.' });
+  }
+});
 
 // ── Serve React app in production ─────────────────────────────────────────────
 if (isProd) {

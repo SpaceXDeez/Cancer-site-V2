@@ -32,8 +32,12 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat }) {
   const [input, setInput]       = useState('');
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState(null);
-  const bottomRef               = useRef(null);
-  const textareaRef             = useRef(null);
+  const [attachment, setAttachment]   = useState(null); // { name, text }
+  const [uploading, setUploading]     = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  const bottomRef    = useRef(null);
+  const textareaRef  = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     authFetch(`/api/chats/${chat.id}/messages`)
@@ -58,24 +62,49 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat }) {
     el.style.height = Math.min(el.scrollHeight, 160) + 'px';
   }, [input]);
 
+  async function handleFileSelect(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const res  = await authFetch('/api/upload', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed.');
+      setAttachment({ name: file.name, text: data.text });
+    } catch (err) {
+      setUploadError(err.message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function send(text) {
     const trimmed = text.trim();
-    if (!trimmed || loading || messages === null) return;
+    if ((!trimmed && !attachment) || loading || messages === null) return;
 
-    const optimistic = { id: `tmp-${Date.now()}`, role: 'user', content: trimmed, created_at: new Date().toISOString() };
+    const content = attachment
+      ? `[Attached: ${attachment.name}]\n\n${attachment.text}${trimmed ? `\n\n${trimmed}` : ''}`
+      : trimmed;
+    const optimistic = { id: `tmp-${Date.now()}`, role: 'user', content, created_at: new Date().toISOString() };
     setMessages(prev => [...(prev || []), optimistic]);
     setInput('');
+    setAttachment(null);
     setError(null);
     setLoading(true);
 
     if ((messages || []).length === 0 && chat.name === 'New Chat') {
-      onRenameChat(trimmed.length > 45 ? trimmed.slice(0, 45) + '…' : trimmed);
+      const label = trimmed || attachment?.name || 'Uploaded document';
+      onRenameChat(label.length > 45 ? label.slice(0, 45) + '…' : label);
     }
 
     try {
       const res = await authFetch('/api/chat', {
         method: 'POST',
-        body: JSON.stringify({ chatId: chat.id, content: trimmed }),
+        body: JSON.stringify({ chatId: chat.id, content }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -228,7 +257,56 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat }) {
       {/* Input */}
       <div className="flex-shrink-0 border-t border-gray-200 px-4 pb-4 pt-3 bg-white">
         <div className="max-w-3xl mx-auto">
+
+          {/* Attachment chip */}
+          {(attachment || uploading || uploadError) && (
+            <div className="mb-2 flex items-center gap-2">
+              {uploading && (
+                <span className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5">
+                  <span className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                  Processing file…
+                </span>
+              )}
+              {attachment && !uploading && (
+                <span className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 max-w-xs truncate">
+                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span className="truncate">{attachment.name}</span>
+                  <button onClick={() => setAttachment(null)} className="ml-1 flex-shrink-0 text-emerald-500 hover:text-emerald-800">✕</button>
+                </span>
+              )}
+              {uploadError && (
+                <span className="flex items-center gap-1.5 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-1.5">
+                  {uploadError}
+                  <button onClick={() => setUploadError(null)} className="ml-1 text-red-400 hover:text-red-700">✕</button>
+                </span>
+              )}
+            </div>
+          )}
+
           <div className="flex items-end gap-2 bg-gray-50 border border-gray-300 rounded-2xl px-4 py-2.5 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-300 transition-all">
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            {/* Paperclip button */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading || uploading || messages === null}
+              title="Attach a PDF or image"
+              className="flex-shrink-0 text-gray-400 hover:text-blue-500 disabled:opacity-30 transition-colors self-end mb-0.5"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              </svg>
+            </button>
             <textarea
               ref={textareaRef}
               value={input}
@@ -241,7 +319,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat }) {
             />
             <button
               onClick={() => send(input)}
-              disabled={!input.trim() || loading || messages === null}
+              disabled={(!input.trim() && !attachment) || loading || uploading || messages === null}
               className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 disabled:opacity-40 hover:bg-blue-700 transition-colors self-end mb-0.5"
             >
               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">

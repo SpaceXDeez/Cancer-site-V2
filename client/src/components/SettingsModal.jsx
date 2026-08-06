@@ -142,11 +142,11 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-4">
+      <div className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden rounded-t-2xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-base font-semibold text-gray-900">Settings</h2>
           <button
             onClick={onClose}
@@ -158,9 +158,29 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
           </button>
         </div>
 
+        {/* Mobile: horizontal tab bar */}
+        <div className="sm:hidden flex-shrink-0 border-b border-gray-100 overflow-x-auto">
+          <div className="flex px-4 gap-1 py-1.5">
+            {TABS.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors flex-shrink-0 ${
+                  tab === t.id
+                    ? 'bg-gray-100 text-gray-900 font-medium'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                {t.icon}
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="flex flex-1 min-h-0">
-          {/* Left nav */}
-          <nav className="w-44 flex-shrink-0 border-r border-gray-100 py-3 px-2 space-y-0.5">
+          {/* Desktop: left nav */}
+          <nav className="hidden sm:block w-44 flex-shrink-0 border-r border-gray-100 py-3 px-2 space-y-0.5">
             {TABS.map(t => (
               <button
                 key={t.id}

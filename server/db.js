@@ -15,6 +15,7 @@ const SQLITE_SCHEMA = `
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     email         TEXT    UNIQUE NOT NULL COLLATE NOCASE,
     password_hash TEXT    NOT NULL,
+    is_test       INTEGER NOT NULL DEFAULT 0,
     created_at    TEXT    DEFAULT (datetime('now'))
   );
   CREATE TABLE IF NOT EXISTS profiles (
@@ -42,6 +43,7 @@ const PG_SCHEMA = `
     id            BIGSERIAL PRIMARY KEY,
     email         TEXT    UNIQUE NOT NULL,
     password_hash TEXT    NOT NULL,
+    is_test       BOOLEAN NOT NULL DEFAULT FALSE,
     created_at    TIMESTAMPTZ DEFAULT NOW()
   );
   CREATE TABLE IF NOT EXISTS profiles (
@@ -73,6 +75,8 @@ async function initDb() {
       ssl: { rejectUnauthorized: false },
     });
     await pool.query(PG_SCHEMA);
+    // Add column for existing DBs that predate this field
+    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT FALSE').catch(() => {});
     console.log('Connected to PostgreSQL');
   } else {
     const { DatabaseSync } = require('node:sqlite');
@@ -80,6 +84,7 @@ async function initDb() {
     sqlite.exec('PRAGMA journal_mode = WAL');
     sqlite.exec('PRAGMA foreign_keys = ON');
     sqlite.exec(SQLITE_SCHEMA);
+    try { sqlite.exec('ALTER TABLE users ADD COLUMN is_test INTEGER NOT NULL DEFAULT 0'); } catch { /* already exists */ }
     console.log('Using SQLite (local dev)');
   }
 }
@@ -119,9 +124,9 @@ const db = {
   initDb,
 
   // Users
-  async createUser(email, hash) {
-    if (IS_PG) return pgRun('INSERT INTO users (email, password_hash) VALUES (?, ?) RETURNING id', [email, hash]);
-    return sqRun('INSERT INTO users (email, password_hash) VALUES (?, ?)', [email, hash]);
+  async createUser(email, hash, isTest = false) {
+    if (IS_PG) return pgRun('INSERT INTO users (email, password_hash, is_test) VALUES (?, ?, ?) RETURNING id', [email, hash, isTest]);
+    return sqRun('INSERT INTO users (email, password_hash, is_test) VALUES (?, ?, ?)', [email, hash, isTest ? 1 : 0]);
   },
   async getUserByEmail(email) {
     const q = 'SELECT * FROM users WHERE email = ?';
@@ -129,7 +134,7 @@ const db = {
     return sqGet(q, [email]);
   },
   async getUserById(id) {
-    const q = 'SELECT id FROM users WHERE id = ?';
+    const q = 'SELECT id, is_test FROM users WHERE id = ?';
     if (IS_PG) return pgGet(q, [id]);
     return sqGet(q, [id]);
   },

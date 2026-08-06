@@ -179,11 +179,16 @@ export default function ChatSidebar({
           onClick={onLogout}
           className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-slate-800 transition-colors text-xs"
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
           <span className="truncate">{user?.email || 'Sign out'}</span>
+          {user?.isTest && (
+            <span className="ml-auto flex-shrink-0 text-[10px] font-bold tracking-wide bg-amber-500 text-white rounded px-1.5 py-0.5">
+              TEST
+            </span>
+          )}
         </button>
       </div>
     </aside>

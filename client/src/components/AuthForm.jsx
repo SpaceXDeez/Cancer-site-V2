@@ -4,11 +4,12 @@ import { useAuth } from '../context/AuthContext.jsx';
 // Reusable form used by both LoginModal and the standalone LoginPage
 export default function AuthForm({ onSuccess, compact = false }) {
   const { saveAuth } = useAuth();
-  const [mode, setMode]       = useState('login');
-  const [email, setEmail]     = useState('');
+  const [mode, setMode]         = useState('login');
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError]     = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [isTest, setIsTest]     = useState(false);
+  const [error, setError]       = useState(null);
+  const [loading, setLoading]   = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -18,7 +19,7 @@ export default function AuthForm({ onSuccess, compact = false }) {
       const res  = await fetch(`/api/auth/${mode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password }),
+        body: JSON.stringify({ email: email.trim(), password, ...(mode === 'register' && { isTest }) }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Something went wrong.'); return; }
@@ -71,6 +72,21 @@ export default function AuthForm({ onSuccess, compact = false }) {
             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
           />
         </div>
+
+        {mode === 'register' && (
+          <label className="flex items-start gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={isTest}
+              onChange={e => setIsTest(e.target.checked)}
+              className="mt-0.5 w-4 h-4 text-amber-500 border-gray-300 rounded focus:ring-amber-400"
+            />
+            <span className="text-sm text-gray-600">
+              This is a <span className="font-medium text-amber-600">test / developer account</span>
+              <span className="block text-xs text-gray-400 mt-0.5">Check this if you're testing the app, not a real patient or family member.</span>
+            </span>
+          </label>
+        )}
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2.5 text-sm">

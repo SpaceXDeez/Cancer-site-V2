@@ -153,7 +153,7 @@ function BasicsPanel({ form, upd }) {
   return (
     <>
       <SectionTitle title="Patient Basics" subtitle="Basic information about the patient." />
-      <div className="grid grid-cols-2 gap-x-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
         <Field label="Patient's First Name">
           <TextInput value={form.patientName} onChange={v => upd('patientName', v)} placeholder="e.g. Alex" />
         </Field>
@@ -607,8 +607,8 @@ export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }
   const ActivePanel = panels[active];
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4">
+      <div className="bg-white sm:rounded-2xl w-full sm:max-w-4xl h-[95vh] sm:max-h-[92vh] flex flex-col shadow-2xl rounded-t-2xl">
 
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 flex items-start justify-between flex-shrink-0">
@@ -628,8 +628,8 @@ export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }
         </div>
 
         <div className="flex flex-1 overflow-hidden">
-          {/* Section nav */}
-          <nav className="w-52 border-r border-gray-100 py-3 flex-shrink-0 overflow-y-auto bg-gray-50/50">
+          {/* Desktop: side nav */}
+          <nav className="hidden sm:block w-52 border-r border-gray-100 py-3 flex-shrink-0 overflow-y-auto bg-gray-50/50">
             {SECTIONS.map(s => {
               const filled = sectionHasData(s.id, form);
               return (
@@ -652,8 +652,37 @@ export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }
             })}
           </nav>
 
-          {/* Form body */}
-          <div className="flex-1 overflow-y-auto p-6">
+          {/* Mobile: horizontal scrollable section tabs */}
+          <div className="sm:hidden flex flex-col flex-1 min-h-0">
+            <div className="flex-shrink-0 border-b border-gray-100 overflow-x-auto">
+              <div className="flex px-3 gap-1 py-1.5">
+                {SECTIONS.map(s => {
+                  const filled = sectionHasData(s.id, form);
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => setActive(s.id)}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs whitespace-nowrap transition-colors flex-shrink-0 ${
+                        active === s.id
+                          ? 'bg-blue-50 text-blue-700 font-medium'
+                          : 'text-gray-500 hover:text-gray-900'
+                      }`}
+                    >
+                      <span>{s.icon}</span>
+                      {s.label}
+                      {filled && <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <ActivePanel form={form} upd={upd} tog={tog} />
+            </div>
+          </div>
+
+          {/* Desktop: form body */}
+          <div className="hidden sm:block flex-1 overflow-y-auto p-6">
             <ActivePanel form={form} upd={upd} tog={tog} />
           </div>
         </div>

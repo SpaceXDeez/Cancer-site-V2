@@ -193,7 +193,17 @@ function buildPatientContext(profile) {
   return `\n\n--- PATIENT PROFILE ---\n${lines.join('\n')}\n--- END PATIENT PROFILE ---`;
 }
 
-function buildSystemPrompt(profile) {
+function buildDocumentContext(docs) {
+  if (!docs?.length) return '';
+  // Truncate each doc to 3 000 chars in the system prompt to stay within token budget
+  const sections = docs.map(d => {
+    const preview = d.text.length > 3000 ? d.text.slice(0, 3000) + '\n[…truncated]' : d.text;
+    return `[${d.filename}]\n${preview}`;
+  });
+  return `\n\n--- UPLOADED DOCUMENTS ---\n${sections.join('\n\n')}\n--- END UPLOADED DOCUMENTS ---`;
+}
+
+function buildSystemPrompt(profile, docs) {
   const settings = profile?._settings || {};
 
   const styleNote = {
@@ -222,7 +232,7 @@ You are knowledgeable about:
 When the patient profile is provided, tailor all responses using that information.
 
 CRITICAL DISCLAIMER — include a brief reminder in every response:
-All information I provide is AI-generated and for educational purposes only. Treatment decisions must always be made in partnership with the patient's medical oncology team.${buildPatientContext(profile)}${styleNote}${customNote}`;
+All information I provide is AI-generated and for educational purposes only. Treatment decisions must always be made in partnership with the patient's medical oncology team.${buildPatientContext(profile)}${buildDocumentContext(docs)}${styleNote}${customNote}`;
 }
 
 // ── AI chat endpoint ───────────────────────────────────────────────────────────
@@ -238,6 +248,7 @@ app.post('/api/chat', requireAuth, chatLimiter, async (req, res) => {
 
     const profileRow = await db.getProfile(req.user.userId);
     const profile    = profileRow ? JSON.parse(profileRow.data) : {};
+    const docs       = await db.getUserDocuments(req.user.userId);
     const history    = await db.getMessages(chatId);
 
     if (history.length > 200) {
@@ -254,7 +265,7 @@ app.post('/api/chat', requireAuth, chatLimiter, async (req, res) => {
     const response = await anthropic.messages.create({
       model: 'claude-opus-4-5',
       max_tokens: 2048,
-      system: buildSystemPrompt(profile),
+      system: buildSystemPrompt(profile, docs),
       messages: claudeMessages,
     });
 
@@ -374,7 +385,9 @@ app.post('/api/upload', requireAuth, dailyUploadLimiter, uploadLimiter, (req, re
       text = response.content[0].text.trim();
     }
 
-    res.json({ text: truncate(text), filename: originalname });
+    const truncated = truncate(text);
+    await db.saveDocument(req.user.userId, originalname, truncated);
+    res.json({ text: truncated, filename: originalname });
   } catch (err) {
     console.error('Upload error:', err.message);
     res.status(500).json({ error: 'Failed to process file. Please try again.' });

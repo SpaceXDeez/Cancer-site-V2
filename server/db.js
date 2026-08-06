@@ -37,6 +37,13 @@ const SQLITE_SCHEMA = `
     content    TEXT    NOT NULL,
     created_at TEXT    DEFAULT (datetime('now'))
   );
+  CREATE TABLE IF NOT EXISTS documents (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    filename   TEXT    NOT NULL,
+    text       TEXT    NOT NULL,
+    created_at TEXT    DEFAULT (datetime('now'))
+  );
 `;
 
 const PG_SCHEMA = `
@@ -65,6 +72,13 @@ const PG_SCHEMA = `
     content    TEXT    NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
   );
+  CREATE TABLE IF NOT EXISTS documents (
+    id         BIGSERIAL PRIMARY KEY,
+    user_id    BIGINT  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    filename   TEXT    NOT NULL,
+    text       TEXT    NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+  );
 `;
 
 // ── Initialize (call once at server startup) ──────────────────────────────────
@@ -78,6 +92,14 @@ async function initDb() {
     await pool.query(PG_SCHEMA);
     // Add column for existing DBs that predate this field
     await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT FALSE').catch(() => {});
+    // Migration for documents table added after initial deploy
+    await pool.query(`CREATE TABLE IF NOT EXISTS documents (
+      id         BIGSERIAL PRIMARY KEY,
+      user_id    BIGINT  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      filename   TEXT    NOT NULL,
+      text       TEXT    NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`).catch(() => {});
     console.log('Connected to PostgreSQL');
   } else {
     const { DatabaseSync } = require('node:sqlite');
@@ -213,6 +235,19 @@ const db = {
     const q = 'SELECT id, role, content, created_at FROM messages WHERE chat_id = ? ORDER BY created_at ASC';
     const rows = IS_PG ? await pgAll(q, [chatId]) : await sqAll(q, [chatId]);
     return rows.map(r => ({ ...r, content: decrypt(r.content) }));
+  },
+
+  // Documents (persist across chats)
+  async saveDocument(userId, filename, text) {
+    const encName = encrypt(filename);
+    const encText = encrypt(text);
+    if (IS_PG) return pgRun('INSERT INTO documents (user_id, filename, text) VALUES (?, ?, ?) RETURNING id', [userId, encName, encText]);
+    return sqRun('INSERT INTO documents (user_id, filename, text) VALUES (?, ?, ?)', [userId, encName, encText]);
+  },
+  async getUserDocuments(userId) {
+    const q = 'SELECT id, filename, text, created_at FROM documents WHERE user_id = ? ORDER BY created_at DESC LIMIT 10';
+    const rows = IS_PG ? await pgAll(q, [userId]) : await sqAll(q, [userId]);
+    return rows.map(r => ({ ...r, filename: decrypt(r.filename), text: decrypt(r.text) }));
   },
 };
 

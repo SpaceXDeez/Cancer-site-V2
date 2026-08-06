@@ -16,8 +16,11 @@ router.get('/', requireAuth, async (req, res) => {
 
 router.put('/', requireAuth, async (req, res) => {
   try {
-    const data = JSON.stringify(req.body);
-    await db.upsertProfile(req.user.userId, data);
+    const profile = req.body.profile;
+    if (!profile || typeof profile !== 'object' || Array.isArray(profile)) {
+      return res.status(400).json({ error: 'Invalid profile data.' });
+    }
+    await db.upsertProfile(req.user.userId, JSON.stringify(profile));
     res.json({ success: true });
   } catch (err) {
     console.error('Save profile error:', err.message);

@@ -4,8 +4,9 @@ export default function ChatSidebar({
   chats, currentChatId, profile, user, view, sidebarOpen,
   onNewChat, onSelectChat, onDeleteChat, onRenameChat, onOpenProfile, onLogout, onSetView, onCloseSidebar,
 }) {
-  const [renamingId, setRenamingId] = useState(null);
-  const [renameVal, setRenameVal]   = useState('');
+  const [renamingId, setRenamingId]   = useState(null);
+  const [renameVal, setRenameVal]     = useState('');
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   function startRename(chat, e) {
     e.stopPropagation();
@@ -184,22 +185,42 @@ export default function ChatSidebar({
           </svg>
         </button>
 
-        <button
-          onClick={onLogout}
-          title="Sign out"
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-slate-800 transition-colors text-xs"
-        >
-          <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          <span className="truncate">{user?.email || 'Sign out'}</span>
-          {user?.isTest && (
-            <span className="ml-auto flex-shrink-0 text-[10px] font-bold tracking-wide bg-amber-500 text-white rounded px-1.5 py-0.5">
-              TEST
-            </span>
-          )}
-        </button>
+        {confirmLogout ? (
+          <div className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700">
+            <p className="text-xs text-slate-300 mb-2">Sign out of your account?</p>
+            <div className="flex gap-2">
+              <button
+                onClick={onLogout}
+                className="flex-1 text-xs py-1 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+              >
+                Sign out
+              </button>
+              <button
+                onClick={() => setConfirmLogout(false)}
+                className="flex-1 text-xs py-1 text-slate-400 hover:text-white border border-slate-700 rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmLogout(true)}
+            title="Sign out"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-slate-800 transition-colors text-xs"
+          >
+            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span className="truncate">{user?.email || 'Sign out'}</span>
+            {user?.isTest && (
+              <span className="ml-auto flex-shrink-0 text-[10px] font-bold tracking-wide bg-amber-500 text-white rounded px-1.5 py-0.5">
+                TEST
+              </span>
+            )}
+          </button>
+        )}
       </div>
     </aside>
   );

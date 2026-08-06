@@ -74,7 +74,7 @@ export default function App() {
 
   const handleRenameChat = useCallback(async (id, name) => {
     try {
-      await authFetch(`/api/chats/${id}`, { method: 'PUT', body: JSON.stringify({ name }) });
+      await authFetch(`/api/chats/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) });
       setChats(prev => prev.map(c => c.id === id ? { ...c, name } : c));
     } catch (err) { console.error(err); }
   }, [authFetch]);

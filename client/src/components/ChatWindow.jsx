@@ -122,7 +122,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat }) {
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200 flex-shrink-0 gap-3">
+      <div className="flex items-center justify-between pr-5 pl-14 md:pl-5 py-3 border-b border-gray-200 flex-shrink-0 gap-3">
         <div className="min-w-0">
           <h2 className="font-semibold text-gray-900 text-sm truncate">{chat.name}</h2>
           <p className="text-xs text-gray-400">

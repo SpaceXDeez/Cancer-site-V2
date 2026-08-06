@@ -17,6 +17,7 @@ export default function App() {
   const [isFirstVisit, setIsFirstVisit] = useState(false);
   const [appLoading, setAppLoading]     = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [sidebarOpen, setSidebarOpen]       = useState(false);
 
   // Load profile + chats whenever the user logs in
   useEffect(() => {
@@ -114,21 +115,43 @@ export default function App() {
     );
   }
 
+  const closeSidebar = () => setSidebarOpen(false);
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/60 z-40 md:hidden" onClick={closeSidebar} />
+      )}
+
+      {/* Floating hamburger — mobile only, hidden when sidebar is open */}
+      {!sidebarOpen && (
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="fixed top-3 left-3 z-30 md:hidden bg-slate-800/95 text-white p-2.5 rounded-xl shadow-lg"
+          aria-label="Open menu"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      )}
+
       <ChatSidebar
         chats={chats}
         currentChatId={currentId}
         profile={profile}
         user={user}
         view={view}
-        onNewChat={handleNewChat}
-        onSelectChat={(id) => { setCurrentId(id); setView('chat'); }}
+        sidebarOpen={sidebarOpen}
+        onNewChat={() => { handleNewChat(); closeSidebar(); }}
+        onSelectChat={(id) => { setCurrentId(id); setView('chat'); closeSidebar(); }}
         onDeleteChat={handleDeleteChat}
         onRenameChat={handleRenameChat}
-        onOpenProfile={() => setShowQ(true)}
+        onOpenProfile={() => { setShowQ(true); closeSidebar(); }}
         onLogout={logout}
-        onSetView={setView}
+        onSetView={(v) => { setView(v); closeSidebar(); }}
+        onCloseSidebar={closeSidebar}
       />
 
       <main className="flex-1 flex flex-col overflow-hidden">

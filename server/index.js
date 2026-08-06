@@ -14,6 +14,9 @@ if (!process.env.JWT_SECRET) {
   console.error('ERROR: JWT_SECRET is not set');
   process.exit(1);
 }
+if (!process.env.ENCRYPTION_KEY && process.env.NODE_ENV === 'production') {
+  console.warn('WARNING: ENCRYPTION_KEY is not set — patient data will be stored unencrypted.');
+}
 
 const app  = express();
 const PORT = process.env.PORT || 3001;

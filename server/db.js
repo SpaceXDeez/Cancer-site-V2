@@ -1,4 +1,5 @@
 // Unified async DB interface.
+const { encrypt, decrypt } = require('./utils/encrypt');
 // Local dev: node:sqlite (no install needed, Node >= 22.5)
 // Production: PostgreSQL via DATABASE_URL environment variable
 // To migrate: set DATABASE_URL in your hosting provider's env vars — no code changes needed.
@@ -138,42 +139,52 @@ const db = {
     if (IS_PG) return pgGet(q, [id]);
     return sqGet(q, [id]);
   },
+  async deleteUser(id) {
+    const q = 'DELETE FROM users WHERE id = ?';
+    if (IS_PG) return pgRun(q, [id]);
+    return sqRun(q, [id]);
+  },
 
   // Profiles
   async upsertProfile(userId, data) {
+    const enc = encrypt(data);
     const q = IS_PG
       ? `INSERT INTO profiles (user_id, data, updated_at) VALUES (?, ?, NOW())
          ON CONFLICT(user_id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()`
       : `INSERT INTO profiles (user_id, data, updated_at) VALUES (?, ?, datetime('now'))
          ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`;
-    if (IS_PG) return pgRun(q, [userId, data]);
-    return sqRun(q, [userId, data]);
+    if (IS_PG) return pgRun(q, [userId, enc]);
+    return sqRun(q, [userId, enc]);
   },
   async getProfile(userId) {
     const q = 'SELECT data FROM profiles WHERE user_id = ?';
-    if (IS_PG) return pgGet(q, [userId]);
-    return sqGet(q, [userId]);
+    const row = IS_PG ? await pgGet(q, [userId]) : await sqGet(q, [userId]);
+    if (row) row.data = decrypt(row.data);
+    return row;
   },
 
   // Chats
   async createChat(userId, name) {
-    if (IS_PG) return pgRun('INSERT INTO chats (user_id, name) VALUES (?, ?) RETURNING id', [userId, name]);
-    return sqRun('INSERT INTO chats (user_id, name) VALUES (?, ?)', [userId, name]);
+    const enc = encrypt(name);
+    if (IS_PG) return pgRun('INSERT INTO chats (user_id, name) VALUES (?, ?) RETURNING id', [userId, enc]);
+    return sqRun('INSERT INTO chats (user_id, name) VALUES (?, ?)', [userId, enc]);
   },
   async getChats(userId) {
     const q = 'SELECT id, name, created_at FROM chats WHERE user_id = ? ORDER BY created_at DESC';
-    if (IS_PG) return pgAll(q, [userId]);
-    return sqAll(q, [userId]);
+    const rows = IS_PG ? await pgAll(q, [userId]) : await sqAll(q, [userId]);
+    return rows.map(r => ({ ...r, name: decrypt(r.name) }));
   },
   async getChatById(chatId, userId) {
     const q = 'SELECT * FROM chats WHERE id = ? AND user_id = ?';
-    if (IS_PG) return pgGet(q, [chatId, userId]);
-    return sqGet(q, [chatId, userId]);
+    const row = IS_PG ? await pgGet(q, [chatId, userId]) : await sqGet(q, [chatId, userId]);
+    if (row) row.name = decrypt(row.name);
+    return row;
   },
   async renameChat(chatId, userId, name) {
+    const enc = encrypt(name);
     const q = 'UPDATE chats SET name = ? WHERE id = ? AND user_id = ?';
-    if (IS_PG) return pgRun(q, [name, chatId, userId]);
-    return sqRun(q, [name, chatId, userId]);
+    if (IS_PG) return pgRun(q, [enc, chatId, userId]);
+    return sqRun(q, [enc, chatId, userId]);
   },
   async deleteChat(chatId, userId) {
     const q = 'DELETE FROM chats WHERE id = ? AND user_id = ?';
@@ -183,14 +194,15 @@ const db = {
 
   // Messages
   async insertMessage(chatId, role, content) {
+    const enc = encrypt(content);
     const q = 'INSERT INTO messages (chat_id, role, content) VALUES (?, ?, ?)';
-    if (IS_PG) return pgRun(q, [chatId, role, content]);
-    return sqRun(q, [chatId, role, content]);
+    if (IS_PG) return pgRun(q, [chatId, role, enc]);
+    return sqRun(q, [chatId, role, enc]);
   },
   async getMessages(chatId) {
     const q = 'SELECT id, role, content, created_at FROM messages WHERE chat_id = ? ORDER BY created_at ASC';
-    if (IS_PG) return pgAll(q, [chatId]);
-    return sqAll(q, [chatId]);
+    const rows = IS_PG ? await pgAll(q, [chatId]) : await sqAll(q, [chatId]);
+    return rows.map(r => ({ ...r, content: decrypt(r.content) }));
   },
 };
 

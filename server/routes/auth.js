@@ -1,7 +1,8 @@
-const express = require('express');
-const bcrypt  = require('bcryptjs');
-const jwt     = require('jsonwebtoken');
-const db      = require('../db');
+const express     = require('express');
+const bcrypt      = require('bcryptjs');
+const jwt         = require('jsonwebtoken');
+const db          = require('../db');
+const requireAuth = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -43,6 +44,16 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error('Login error:', err.message);
     res.status(500).json({ error: 'Login failed. Please try again.' });
+  }
+});
+
+router.delete('/account', requireAuth, async (req, res) => {
+  try {
+    await db.deleteUser(req.user.userId);
+    res.json({ message: 'Account and all associated data deleted.' });
+  } catch (err) {
+    console.error('Delete account error:', err.message);
+    res.status(500).json({ error: 'Failed to delete account. Please try again.' });
   }
 });
 

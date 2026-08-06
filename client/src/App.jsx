@@ -101,6 +101,13 @@ export default function App() {
     } catch (err) { console.error(err); }
   }, [authFetch, profile]);
 
+  const handleDeleteAccount = useCallback(async () => {
+    try {
+      await authFetch('/api/auth/account', { method: 'DELETE' });
+    } catch (err) { console.error(err); }
+    logout();
+  }, [authFetch, logout]);
+
   // Logged-out: show home page with login modal
   if (!token) {
     return (
@@ -162,6 +169,7 @@ export default function App() {
         onRenameChat={handleRenameChat}
         onOpenProfile={() => { setShowQ(true); closeSidebar(); }}
         onLogout={logout}
+        onDeleteAccount={handleDeleteAccount}
         onSetView={(v) => { setView(v); closeSidebar(); }}
         onCloseSidebar={closeSidebar}
       />

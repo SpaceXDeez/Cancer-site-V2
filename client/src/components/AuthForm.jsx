@@ -34,6 +34,28 @@ export default function AuthForm({ onSuccess, compact = false }) {
     }
   }
 
+  async function handleCreateTestAccount() {
+    setError(null);
+    setLoading(true);
+    try {
+      const rand  = () => Math.random().toString(36).slice(2);
+      const creds = { email: `test_${rand()}@dev.local`, password: rand() + rand(), isTest: true };
+      const res   = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(creds),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || 'Something went wrong.'); return; }
+      saveAuth(data.token, data.user);
+      onSuccess?.();
+    } catch {
+      setError('Could not connect to the server. Is it running?');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div>
       {!compact && (
@@ -103,6 +125,25 @@ export default function AuthForm({ onSuccess, compact = false }) {
         >
           {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : 'Create Account'}
         </button>
+
+        {showDevOption && (
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+            <div className="relative flex justify-center">
+              <span className="bg-white px-2 text-xs text-gray-400">dev shortcut</span>
+            </div>
+          </div>
+        )}
+        {showDevOption && (
+          <button
+            type="button"
+            onClick={handleCreateTestAccount}
+            disabled={loading}
+            className="w-full border border-amber-300 bg-amber-50 hover:bg-amber-100 disabled:opacity-50 text-amber-700 font-medium py-2 rounded-lg text-sm transition-colors"
+          >
+            {loading ? 'Please wait…' : 'One-click test account'}
+          </button>
+        )}
       </form>
 
       <p className="text-center text-sm text-gray-500 mt-5">

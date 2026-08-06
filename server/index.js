@@ -68,6 +68,21 @@ const uploadLimiter = rateLimit({
   message: { error: 'Upload rate limit reached. Please wait a moment.' },
 });
 
+// Per-user daily upload cap — runs after requireAuth so req.user is available
+const dailyUploadLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: 20,
+  keyGenerator: req => `upload_daily:${req.user.userId}`,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Daily upload limit reached (20 documents per day). Try again tomorrow.' },
+});
+
+const MAX_EXTRACTED_CHARS = 50_000;
+const truncate = t =>
+  t.length <= MAX_EXTRACTED_CHARS ? t
+    : `${t.slice(0, MAX_EXTRACTED_CHARS)}\n\n[Document truncated — only the first ${MAX_EXTRACTED_CHARS.toLocaleString()} characters were included.]`;
+
 // ── File upload (memory storage — no files written to disk) ───────────────────
 const multer = require('multer');
 const upload = multer({
@@ -278,7 +293,7 @@ app.post('/api/chat', requireAuth, chatLimiter, async (req, res) => {
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
 // ── File upload → text extraction ─────────────────────────────────────────────
-app.post('/api/upload', requireAuth, uploadLimiter, (req, res, next) => {
+app.post('/api/upload', requireAuth, dailyUploadLimiter, uploadLimiter, (req, res, next) => {
   upload.single('file')(req, res, err => {
     if (err?.code === 'LIMIT_FILE_SIZE') return res.status(400).json({ error: 'File too large. Maximum size is 20 MB.' });
     if (err) return res.status(400).json({ error: err.message });
@@ -310,7 +325,7 @@ app.post('/api/upload', requireAuth, uploadLimiter, (req, res, next) => {
       text = response.content[0].text.trim();
     }
 
-    res.json({ text, filename: originalname });
+    res.json({ text: truncate(text), filename: originalname });
   } catch (err) {
     console.error('Upload error:', err.message);
     res.status(500).json({ error: 'Failed to process file. Please try again.' });

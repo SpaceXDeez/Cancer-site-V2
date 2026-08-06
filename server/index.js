@@ -336,14 +336,33 @@ app.post('/api/upload', requireAuth, dailyUploadLimiter, uploadLimiter, (req, re
     let text = '';
 
     if (mimetype === 'application/pdf') {
-      const pdfParse = require('pdf-parse');
-      const parsed = await pdfParse(buffer);
-      text = parsed.text.trim();
+      // Try fast local extraction first; fall back to Claude if it fails or returns nothing
+      try {
+        const pdfParse = require('pdf-parse');
+        const parsed   = await pdfParse(buffer);
+        text = parsed.text.trim();
+      } catch { /* fall through to Claude */ }
+
+      if (!text) {
+        const response = await anthropic.messages.create({
+          model: 'claude-opus-4-5',
+          max_tokens: 2048,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: buffer.toString('base64') } },
+              { type: 'text', text: 'This is a medical document. Extract and transcribe all visible text, values, labels, dates, and units exactly as they appear. Preserve structure.' },
+            ],
+          }],
+        });
+        text = response.content[0].text.trim();
+      }
+
       if (!text) return res.status(422).json({ error: 'No readable text found in this PDF.' });
     } else {
       const response = await anthropic.messages.create({
         model: 'claude-opus-4-5',
-        max_tokens: 1024,
+        max_tokens: 2048,
         messages: [{
           role: 'user',
           content: [

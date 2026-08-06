@@ -262,7 +262,7 @@ app.post('/api/chat', requireAuth, chatLimiter, async (req, res) => {
 
     // Run DB write and context extraction in parallel — extraction never blocks the response
     const userMsgCount = history.filter(m => m.role === 'user').length + 1; // +1 for this message
-    const shouldExtract = userMsgCount >= 2 && userMsgCount % 4 === 0;
+    const shouldExtract = userMsgCount >= 2;
 
     const [, extractResult] = await Promise.allSettled([
       db.insertMessage(chatId, 'assistant', aiContent),

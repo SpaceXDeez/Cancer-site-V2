@@ -1,6 +1,24 @@
 import React, { useState } from 'react';
 
+function getInitials(name, email) {
+  const src = name?.trim() || email || '';
+  const words = src.split(/\s+/);
+  return words.length > 1
+    ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
+    : src.slice(0, 2).toUpperCase();
+}
+
 const TABS = [
+  {
+    id: 'profile',
+    label: 'Profile',
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    ),
+  },
   {
     id: 'personalization',
     label: 'Personalization',
@@ -51,10 +69,11 @@ const AI_STYLES = [
   },
 ];
 
-export default function SettingsModal({ user, profile, authFetch, onSave, onDeleteAllChats, onDeleteAccount, onClose }) {
+export default function SettingsModal({ user, profile, authFetch, onSave, onDeleteAllChats, onDeleteAccount, onOpenQuestionnaire, onClose, initialTab = 'profile' }) {
   const settings = profile?._settings || {};
 
-  const [tab, setTab]                   = useState('personalization');
+  const [tab, setTab]                   = useState(initialTab);
+  const [displayName, setDisplayName]   = useState(settings.displayName || '');
   const [aiStyle, setAiStyle]           = useState(settings.aiStyle || 'balanced');
   const [customInstructions, setCustom] = useState(settings.customInstructions || '');
   const [saving, setSaving]             = useState(false);
@@ -75,7 +94,7 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
 
   async function savePersonalization() {
     setSaving(true);
-    await onSave({ aiStyle, customInstructions });
+    await onSave({ displayName, aiStyle, customInstructions });
     setSaving(false);
     setSavedMsg('Saved');
     setTimeout(() => setSavedMsg(''), 2500);
@@ -160,6 +179,60 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
 
           {/* Right content */}
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+
+            {/* ── Profile ── */}
+            {tab === 'profile' && (
+              <>
+                {/* Avatar */}
+                <div className="flex flex-col items-center gap-3 pb-5 border-b border-gray-100">
+                  <div className="w-20 h-20 rounded-full bg-slate-400 flex items-center justify-center">
+                    <span className="text-white text-2xl font-semibold select-none">
+                      {getInitials(displayName || settings.displayName, user?.email)}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Display name</label>
+                  <input
+                    type="text"
+                    value={displayName}
+                    onChange={e => setDisplayName(e.target.value)}
+                    maxLength={60}
+                    placeholder="Your name"
+                    className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Shown in the sidebar. Not used medically.</p>
+                </div>
+
+                <div className="flex items-center justify-between py-3 border-t border-gray-100">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Medical profile</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Diagnosis, treatment, medications, and more.</p>
+                  </div>
+                  <button
+                    onClick={() => { onSave({ displayName, aiStyle, customInstructions }); onOpenQuestionnaire(); }}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Edit
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-3 pt-1">
+                  <button
+                    onClick={savePersonalization}
+                    disabled={saving}
+                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    {saving ? 'Saving…' : 'Save'}
+                  </button>
+                  {savedMsg && <span className="text-sm text-emerald-600">{savedMsg}</span>}
+                </div>
+              </>
+            )}
 
             {/* ── Personalization ── */}
             {tab === 'personalization' && (

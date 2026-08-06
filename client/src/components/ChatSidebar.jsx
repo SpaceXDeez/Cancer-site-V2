@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 export default function ChatSidebar({
   chats, currentChatId, profile, user, view, sidebarOpen,
-  onNewChat, onSelectChat, onDeleteChat, onRenameChat, onOpenProfile, onLogout, onDeleteAccount, onOpenSettings, onSetView, onCloseSidebar,
+  onNewChat, onSelectChat, onDeleteChat, onRenameChat, onOpenProfile, onLogout, onSetView, onCloseSidebar,
 }) {
   const [renamingId, setRenamingId] = useState(null);
   const [renameVal, setRenameVal]   = useState('');
@@ -18,10 +18,20 @@ export default function ChatSidebar({
     setRenamingId(null);
   }
 
-  const profileName = profile?.patientName || 'Patient Profile';
+  const displayName = profile?._settings?.displayName?.trim();
+  const profileName = displayName || profile?.patientName || 'My Profile';
+  // Count only non-private (non-underscore) profile fields for the subtitle
   const filledCount = profile
-    ? Object.values(profile).filter(v => v !== '' && v !== null && v !== undefined && (!Array.isArray(v) || v.length > 0)).length
+    ? Object.entries(profile).filter(([k, v]) => !k.startsWith('_') && v !== '' && v !== null && v !== undefined && (!Array.isArray(v) || v.length > 0)).length
     : 0;
+
+  function getInitials(name, email) {
+    const src = name?.trim() || email || '';
+    const words = src.split(/\s+/);
+    return words.length > 1
+      ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
+      : src.slice(0, 2).toUpperCase();
+  }
 
   return (
     <aside className={`w-64 bg-slate-900 flex flex-col h-full flex-shrink-0 fixed inset-y-0 left-0 z-50 md:relative md:z-auto transition-transform duration-300 ease-in-out md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -152,22 +162,21 @@ export default function ChatSidebar({
         )}
       </div>
 
-      {/* Profile + logout */}
+      {/* Profile button — opens unified settings panel */}
       <div className="px-3 py-3 border-t border-slate-700/60 space-y-1">
         <button
           onClick={onOpenProfile}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition-colors group"
         >
-          <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 group-hover:bg-slate-600 transition-colors">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+          <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center flex-shrink-0 group-hover:bg-slate-500 transition-colors flex-shrink-0">
+            <span className="text-white text-xs font-semibold select-none">
+              {getInitials(displayName, user?.email)}
+            </span>
           </div>
           <div className="text-left flex-1 min-w-0">
             <p className="text-sm font-medium truncate leading-tight">{profileName}</p>
             <p className="text-xs text-slate-500 leading-tight">
-              {filledCount > 0 ? `${filledCount} field${filledCount !== 1 ? 's' : ''} saved` : 'Click to edit profile'}
+              {filledCount > 0 ? `${filledCount} profile field${filledCount !== 1 ? 's' : ''} saved` : 'Settings & profile'}
             </p>
           </div>
           <svg className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -175,35 +184,22 @@ export default function ChatSidebar({
           </svg>
         </button>
 
-        <div className="flex gap-1">
-          <button
-            onClick={onLogout}
-            title="Sign out"
-            className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-slate-800 transition-colors text-xs"
-          >
-            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span className="truncate">{user?.email || 'Sign out'}</span>
-            {user?.isTest && (
-              <span className="ml-auto flex-shrink-0 text-[10px] font-bold tracking-wide bg-amber-500 text-white rounded px-1.5 py-0.5">
-                TEST
-              </span>
-            )}
-          </button>
-          <button
-            onClick={onOpenSettings}
-            title="Settings"
-            className="flex-shrink-0 p-2 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </button>
-        </div>
+        <button
+          onClick={onLogout}
+          title="Sign out"
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-slate-800 transition-colors text-xs"
+        >
+          <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span className="truncate">{user?.email || 'Sign out'}</span>
+          {user?.isTest && (
+            <span className="ml-auto flex-shrink-0 text-[10px] font-bold tracking-wide bg-amber-500 text-white rounded px-1.5 py-0.5">
+              TEST
+            </span>
+          )}
+        </button>
       </div>
     </aside>
   );

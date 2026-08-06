@@ -185,10 +185,8 @@ export default function App() {
         onSelectChat={(id) => { setCurrentId(id); setView('chat'); closeSidebar(); }}
         onDeleteChat={handleDeleteChat}
         onRenameChat={handleRenameChat}
-        onOpenProfile={() => { setShowQ(true); closeSidebar(); }}
+        onOpenProfile={() => { setShowSettings(true); closeSidebar(); }}
         onLogout={logout}
-        onDeleteAccount={handleDeleteAccount}
-        onOpenSettings={() => { setShowSettings(true); closeSidebar(); }}
         onSetView={(v) => { setView(v); closeSidebar(); }}
         onCloseSidebar={closeSidebar}
       />
@@ -235,6 +233,7 @@ export default function App() {
           onSave={handleSaveSettings}
           onDeleteAllChats={handleDeleteAllChats}
           onDeleteAccount={handleDeleteAccount}
+          onOpenQuestionnaire={() => { setShowSettings(false); setShowQ(true); }}
           onClose={() => setShowSettings(false)}
         />
       )}

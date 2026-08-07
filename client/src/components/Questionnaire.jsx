@@ -688,65 +688,62 @@ export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }
         )}
 
         <div className="flex flex-1 overflow-hidden">
-          {/* Desktop: side nav — hidden in wizard mode */}
-          {!isFirstVisit && (
-            <nav className="hidden sm:block w-52 border-r border-gray-100 py-3 flex-shrink-0 overflow-y-auto bg-gray-50/50">
-              {SECTIONS.map(s => {
-                const filled = sectionHasData(s.id, form);
-                return (
-                  <button
-                    key={s.id}
-                    onClick={() => setActive(s.id)}
-                    className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left transition-colors relative ${
-                      active === s.id
-                        ? 'bg-blue-50 text-blue-700 font-medium border-r-2 border-blue-600'
-                        : 'text-gray-600 hover:bg-white hover:text-gray-900'
-                    }`}
-                  >
-                    <span className="text-base leading-none">{s.icon}</span>
-                    <span className="flex-1 leading-snug">{s.label}</span>
-                    {filled && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" title="Has data" />
-                    )}
-                  </button>
-                );
-              })}
-            </nav>
-          )}
+          {/* Desktop: side nav — always visible */}
+          <nav className="hidden sm:block w-52 border-r border-gray-100 py-3 flex-shrink-0 overflow-y-auto bg-gray-50/50">
+            {SECTIONS.map((s, i) => {
+              const filled = sectionHasData(s.id, form);
+              const isCurrent = effectiveActive === s.id;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => isFirstVisit ? setWizardStep(i) : setActive(s.id)}
+                  className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left transition-colors relative ${
+                    isCurrent
+                      ? 'bg-blue-50 text-blue-700 font-medium border-r-2 border-blue-600'
+                      : 'text-gray-600 hover:bg-white hover:text-gray-900'
+                  }`}
+                >
+                  <span className="text-base leading-none">{s.icon}</span>
+                  <span className="flex-1 leading-snug">{s.label}</span>
+                  {filled && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" title="Has data" />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
 
-          {/* Mobile: horizontal scrollable section tabs — hidden in wizard mode */}
-          {!isFirstVisit && (
-            <div className="sm:hidden flex flex-col flex-1 min-h-0">
-              <div className="flex-shrink-0 border-b border-gray-100 overflow-x-auto">
-                <div className="flex px-3 gap-1 py-1.5">
-                  {SECTIONS.map(s => {
-                    const filled = sectionHasData(s.id, form);
-                    return (
-                      <button
-                        key={s.id}
-                        onClick={() => setActive(s.id)}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs whitespace-nowrap transition-colors flex-shrink-0 ${
-                          active === s.id
-                            ? 'bg-blue-50 text-blue-700 font-medium'
-                            : 'text-gray-500 hover:text-gray-900'
-                        }`}
-                      >
-                        <span>{s.icon}</span>
-                        {s.label}
-                        {filled && <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4">
-                <ActivePanel form={form} upd={upd} tog={tog} />
+          {/* Mobile: horizontal scrollable section tabs */}
+          <div className="sm:hidden flex flex-col flex-1 min-h-0">
+            <div className="flex-shrink-0 border-b border-gray-100 overflow-x-auto">
+              <div className="flex px-3 gap-1 py-1.5">
+                {SECTIONS.map((s, i) => {
+                  const filled = sectionHasData(s.id, form);
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => isFirstVisit ? setWizardStep(i) : setActive(s.id)}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs whitespace-nowrap transition-colors flex-shrink-0 ${
+                        effectiveActive === s.id
+                          ? 'bg-blue-50 text-blue-700 font-medium'
+                          : 'text-gray-500 hover:text-gray-900'
+                      }`}
+                    >
+                      <span>{s.icon}</span>
+                      {s.label}
+                      {filled && <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />}
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          )}
+            <div className="flex-1 overflow-y-auto p-4">
+              <ActivePanel form={form} upd={upd} tog={tog} />
+            </div>
+          </div>
 
-          {/* Form body — full width in wizard mode, desktop-only otherwise */}
-          <div className={`${isFirstVisit ? 'flex' : 'hidden sm:flex'} flex-col flex-1 overflow-hidden`}>
+          {/* Desktop: form body */}
+          <div className="hidden sm:flex flex-col flex-1 overflow-hidden">
             <div className="flex-1 overflow-y-auto p-6">
               <ActivePanel form={form} upd={upd} tog={tog} />
             </div>

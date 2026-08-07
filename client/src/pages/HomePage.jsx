@@ -1,5 +1,18 @@
 ﻿import React from 'react';
 
+function RibbonIcon() {
+  return (
+    <svg width="18" height="26" viewBox="0 0 18 26" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      {/* Loop */}
+      <path d="M9 1C5.5 1 2.5 3.8 2.5 7.2C2.5 10 4.5 12.4 7.2 13.4L9 14L10.8 13.4C13.5 12.4 15.5 10 15.5 7.2C15.5 3.8 12.5 1 9 1Z" fill="#FCD34D"/>
+      {/* Left tail */}
+      <path d="M7.2 13.4L3 22L6.5 20L9 25L9 14L7.2 13.4Z" fill="#FCD34D"/>
+      {/* Right tail */}
+      <path d="M10.8 13.4L15 22L11.5 20L9 25L9 14L10.8 13.4Z" fill="#FCD34D"/>
+    </svg>
+  );
+}
+
 function Step({ number, title, description }) {
   return (
     <div className="flex gap-4">
@@ -98,17 +111,9 @@ export default function HomePage({ isLoggedIn, user, onLoginClick, onStartChat }
           </div>
           {/* NO ONE FIGHTS ALONE slogan */}
           <div className="mt-6 flex items-center justify-center gap-3">
-            <img
-              src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAVCAYAAABPPm7SAAADcUlEQVQ4T22TXWwUZRSGn29muz/d0nZruwW3XUvRNpa2iqj1AjWVeKUXRBOJV8YESSy3Yq+aEMASmrSSoFZJTOTKn3ihoFxoCMpFQwiGhAT7Y9nQbbv92Vmw3f/dmfnIzOxsG+O5mJmc7zvvec/7nhGGYUgpJW4IYT8pL49TXjiDqqaRnjDenisIfy/uXSGE/S0sAKfUBREsXeqk1likISpQAoKSZrJ+D9reuYYIHnCu2o0kQtd16XR1Q/DvrX6M+LQNoAaguCZZmpZ0vhxA6U9Xb9oAhq5Lm7dFzXrNNCFbupi5PUD34KeoqsLD1DoPfx+gY1BFBCYRO16vMMAaQXcq3VgM88uNFt54pQ/R+q3LFfN+F6K5CbmQQumZq06xpYGUmFKSi/cyMrbJ2McGNR0rzlHuJiQGobUbmVxG2b1q562ojuCoKyH1DKMTSY4eztPkr0PtXqY4VYs3ZMDOKOVsO97I1Up1hYFth5PCWHgaVWhc+KHEB4dKGL6jmIuT1DymQqiRzfIoDZH3ncsugEXfnknA2vIc4fx+Tn0J6Yzg7PEQhraKp9GD9NdDewJlm21VDWwWFTOKs514a5IMj6uMHA/jL9RSo86zUjjCrr5z9hJVa5w9qCBWrFxamCXCAATDHBvO8/lYC2Y8huzT8Kced13tsEV06dv1AkztPLmVz6hrC3JyvMDO5iJH3vagtM+6Pf7fRgdSYMbqydzLs2P/i0x+nUDTcowcK0HwQ2j6ZKuZy2CLkkTGo+DLQzZHIh4h0l3kx1+znJ7IcvuKgnhiA6iMYf9M21ZZ6vOQeYs1rYBSTBHKplGbQ6CWGHy3xLXvPMiCD7VrvdLuPwzM2ONMzQUYHkly/myQfW2bXL3+JAcPxrjxt4/Rc3kufWFAaAjRPGHXOAAW2uZXrPxzgiVNRZeCl54FMlnYo1GajuKvL/HHLQNZyPNqr4GydwOEf4uBeTfI6YtB+nsEN+/AR+8V2FC/oaP3ELn0A2qTe7j4k878fcGpoRKmXoe6V3NcMGOvkc/MUC4HaGhc5+c/a3jzgBdP12rV28Rfh9nVcJmhE5JUyuT7MQntF7bZaGjDXAnqOZP0UrdHnnIOKxebdOgq6xOf1Evf8xu6nXrAAHA0sV63VNE2T8p1W/PuSds7R2sF4EL+MkjxD6PkpN80jxoe8vVcsCfgAAAAASUVORK5CYII="
-              alt="Ewing's sarcoma awareness ribbon"
-              className="w-5 h-6 opacity-90"
-            />
-            <span className="text-yellow-300 font-semibold tracking-widest text-xs uppercase">No One Fights Alone</span>
-            <img
-              src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAVCAYAAABPPm7SAAADcUlEQVQ4T22TXWwUZRSGn29muz/d0nZruwW3XUvRNpa2iqj1AjWVeKUXRBOJV8YESSy3Yq+aEMASmrSSoFZJTOTKn3ihoFxoCMpFQwiGhAT7Y9nQbbv92Vmw3f/dmfnIzOxsG+O5mJmc7zvvec/7nhGGYUgpJW4IYT8pL49TXjiDqqaRnjDenisIfy/uXSGE/S0sAKfUBREsXeqk1likISpQAoKSZrJ+D9reuYYIHnCu2o0kQtd16XR1Q/DvrX6M+LQNoAaguCZZmpZ0vhxA6U9Xb9oAhq5Lm7dFzXrNNCFbupi5PUD34KeoqsLD1DoPfx+gY1BFBCYRO16vMMAaQXcq3VgM88uNFt54pQ/R+q3LFfN+F6K5CbmQQumZq06xpYGUmFKSi/cyMrbJ2McGNR0rzlHuJiQGobUbmVxG2b1q562ojuCoKyH1DKMTSY4eztPkr0PtXqY4VYs3ZMDOKOVsO97I1Up1hYFth5PCWHgaVWhc+KHEB4dKGL6jmIuT1DymQqiRzfIoDZH3ncsugEXfnknA2vIc4fx+Tn0J6Yzg7PEQhraKp9GD9NdDewJlm21VDWwWFTOKs514a5IMj6uMHA/jL9RSo86zUjjCrr5z9hJVa5w9qCBWrFxamCXCAATDHBvO8/lYC2Y8huzT8Kced13tsEV06dv1AkztPLmVz6hrC3JyvMDO5iJH3vagtM+6Pf7fRgdSYMbqydzLs2P/i0x+nUDTcowcK0HwQ2j6ZKuZy2CLkkTGo+DLQzZHIh4h0l3kx1+znJ7IcvuKgnhiA6iMYf9M21ZZ6vOQeYs1rYBSTBHKplGbQ6CWGHy3xLXvPMiCD7VrvdLuPwzM2ONMzQUYHkly/myQfW2bXL3+JAcPxrjxt4/Rc3kufWFAaAjRPGHXOAAW2uZXrPxzgiVNRZeCl54FMlnYo1GajuKvL/HHLQNZyPNqr4GydwOEf4uBeTfI6YtB+nsEN+/AR+8V2FC/oaP3ELn0A2qTe7j4k878fcGpoRKmXoe6V3NcMGOvkc/MUC4HaGhc5+c/a3jzgBdP12rV28Rfh9nVcJmhE5JUyuT7MQntF7bZaGjDXAnqOZP0UrdHnnIOKxebdOgq6xOf1Evf8xu6nXrAAHA0sV63VNE2T8p1W/PuSds7R2sF4EL+MkjxD6PkpN80jxoe8vVcsCfgAAAAASUVORK5CYII="
-              alt=""
-              className="w-5 h-6 opacity-90"
-            />
+            <RibbonIcon />
+            <span className="text-yellow-300 font-semibold tracking-widest text-sm uppercase">No One Fights Alone</span>
+            <RibbonIcon />
           </div>
         </div>
       </div>

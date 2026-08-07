@@ -50,9 +50,8 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
   }, [chat.id]);
 
   const isNew = messages !== null && messages.length === 0;
-  const displayMessages = isNew
-    ? [{ id: 'intro', role: 'assistant', content: INTRO_CONTENT, created_at: new Date().toISOString() }]
-    : (messages || []);
+  // Empty array — new-chat uses a hero layout, not a fake message bubble
+  const displayMessages = isNew ? [] : (messages || []);
 
   useEffect(() => {
     const wasLoading = prevLoadingRef.current;
@@ -211,70 +210,68 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
+      {/* Messages / new-chat hero */}
+      <div className="flex-1 overflow-y-auto px-4 py-5">
         {messages === null ? (
           <div className="flex justify-center pt-12">
             <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
           </div>
+        ) : isNew ? (
+          /* Centered hero — shown before any message is sent */
+          <div className="h-full flex flex-col items-center justify-center gap-3 text-center px-4 py-12">
+            <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <p className="text-xl font-bold text-gray-900 max-w-sm leading-snug">
+              AI support assistant for Ewing&apos;s sarcoma patients and families
+            </p>
+            <p className="text-sm text-gray-500 max-w-xs leading-relaxed">
+              Ask about treatments, side effects, clinical trials, survivorship, and more.
+            </p>
+          </div>
         ) : (
-          <>
+          <div className="space-y-4">
             {displayMessages.map((msg, i) => {
-            const isLastAi = msg.role === 'assistant' && i === displayMessages.length - 1;
-            return (
-              <React.Fragment key={msg.id}>
-                {isLastAi && <div ref={aiResponseRef} />}
-                <MessageBubble message={msg} />
-              </React.Fragment>
-            );
-          })}
+              const isLastAi = msg.role === 'assistant' && i === displayMessages.length - 1;
+              return (
+                <React.Fragment key={msg.id}>
+                  {isLastAi && <div ref={aiResponseRef} />}
+                  <MessageBubble message={msg} />
+                </React.Fragment>
+              );
+            })}
 
-            {/* Starter prompts — shown only in a brand-new empty chat */}
-            {isNew && !loading && (
-              <div className="max-w-3xl">
-                <p className="text-xs text-gray-400 mb-2 ml-11">Suggested questions to get started:</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 ml-11">
-                  {STARTER_PROMPTS.map(p => (
-                    <button
-                      key={p.label}
-                      onClick={() => send(p.text)}
-                      className="text-left px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-200 text-xs text-gray-600 hover:text-blue-700 transition-colors leading-snug"
-                    >
-                      {p.label}
-                    </button>
-                  ))}
+            {loading && (
+              <div className="flex items-start gap-3">
+                <AiAvatar />
+                <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
+                  <div className="flex gap-1 items-center h-5">
+                    {[0, 150, 300].map(d => (
+                      <span key={d} className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                        style={{ animationDelay: `${d}ms` }} />
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
-          </>
-        )}
 
-        {loading && (
-          <div className="flex items-start gap-3">
-            <AiAvatar />
-            <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
-              <div className="flex gap-1 items-center h-5">
-                {[0, 150, 300].map(d => (
-                  <span key={d} className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                    style={{ animationDelay: `${d}ms` }} />
-                ))}
+            {error && (
+              <div className="flex justify-center">
+                <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm max-w-lg text-center">
+                  <span className="font-medium">Error: </span>{error}
+                  <button onClick={() => setError(null)} className="ml-3 text-red-500 hover:text-red-700 underline text-xs">
+                    Dismiss
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
+
+            <div ref={bottomRef} />
           </div>
         )}
-
-        {error && (
-          <div className="flex justify-center">
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm max-w-lg text-center">
-              <span className="font-medium">Error: </span>{error}
-              <button onClick={() => setError(null)} className="ml-3 text-red-500 hover:text-red-700 underline text-xs">
-                Dismiss
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div ref={bottomRef} />
       </div>
 
 {/* Profile auto-saved toast */}
@@ -371,6 +368,26 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
           </p>
         </div>
       </div>
+
+      {/* Suggested questions — shown below input only on new empty chats */}
+      {isNew && !loading && (
+        <div className="flex-shrink-0 px-4 pb-4 bg-white">
+          <div className="max-w-3xl mx-auto">
+            <p className="text-xs text-gray-400 mb-2 text-center">Suggested questions to get started</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {STARTER_PROMPTS.map(p => (
+                <button
+                  key={p.label}
+                  onClick={() => send(p.text)}
+                  className="text-left px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-200 text-xs text-gray-600 hover:text-blue-700 transition-colors leading-snug"
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

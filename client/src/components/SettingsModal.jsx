@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 function getInitials(name, email) {
   const src = name?.trim() || email || '';
@@ -69,10 +69,14 @@ const AI_STYLES = [
   },
 ];
 
-export default function SettingsModal({ user, profile, authFetch, onSave, onDeleteAllChats, onDeleteAccount, onOpenQuestionnaire, onClose, initialTab = 'profile' }) {
+export default function SettingsModal({ user, profile, authFetch, onSave, onDeleteAllChats, onDeleteAccount, onOpenQuestionnaire, onClose, initialTab = 'profile', forcedTab }) {
   const settings = profile?._settings || {};
 
   const [tab, setTab]                   = useState(initialTab);
+
+  // Allow the tutorial to drive which tab is shown
+  useEffect(() => { if (forcedTab) setTab(forcedTab); }, [forcedTab]);
+
   const [displayName, setDisplayName]   = useState(settings.displayName || '');
   const [aiStyle, setAiStyle]           = useState(settings.aiStyle || 'balanced');
   const [customInstructions, setCustom] = useState(settings.customInstructions || '');
@@ -184,6 +188,7 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
             {TABS.map(t => (
               <button
                 key={t.id}
+                data-tutorial={`settings-tab-${t.id}`}
                 onClick={() => setTab(t.id)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-left ${
                   tab === t.id

@@ -23,6 +23,7 @@ export default function App() {
   const [showSettings, setShowSettings]     = useState(false);
   const [showReturnBanner, setShowReturnBanner] = useState(false);
   const [showTutorial, setShowTutorial]         = useState(false);
+  const [tutorialSettingsTab, setTutorialSettingsTab] = useState(null);
 
   // Load profile + chats whenever the user logs in
   useEffect(() => {
@@ -138,6 +139,16 @@ export default function App() {
       setProfile(merged);
     } catch (err) { console.error(err); }
   }, [authFetch, profile]);
+
+  const handleSettingsNav = useCallback((tabOrNull) => {
+    if (tabOrNull) {
+      setShowSettings(true);
+      setTutorialSettingsTab(tabOrNull);
+    } else {
+      setShowSettings(false);
+      setTutorialSettingsTab(null);
+    }
+  }, []);
 
   // Logged-out: show home page with login modal
   if (!token) {
@@ -276,12 +287,13 @@ export default function App() {
           onDeleteAllChats={handleDeleteAllChats}
           onDeleteAccount={handleDeleteAccount}
           onOpenQuestionnaire={() => { setShowSettings(false); setShowQ(true); }}
-          onClose={() => setShowSettings(false)}
+          onClose={() => { setShowSettings(false); setTutorialSettingsTab(null); }}
+          forcedTab={tutorialSettingsTab}
         />
       )}
 
       {showTutorial && !showQ && (
-        <TutorialOverlay onDone={() => setShowTutorial(false)} />
+        <TutorialOverlay onDone={() => setShowTutorial(false)} onSettingsNav={handleSettingsNav} />
       )}
     </div>
   );

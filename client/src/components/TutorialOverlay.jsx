@@ -1,51 +1,63 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
 
-const SETTINGS_TABS = [
-  { icon: '👤', tab: 'Profile',         desc: 'Set your display name and edit the full medical profile the AI reads on every message.' },
-  { icon: '✨', tab: 'Personalization', desc: "Pick the AI's tone (supportive / balanced / clinical) and add custom instructions it always follows." },
-  { icon: '🔒', tab: 'Account',         desc: 'View your email and change your password.' },
-  { icon: '📁', tab: 'Data controls',   desc: 'Download everything as JSON, delete all chats, or permanently delete your account.' },
-];
-
 const STEPS = [
   {
     target: null,
     title: 'Welcome to your AI support tool 👋',
-    body: "Quick 5-step tour so you know how to get the most out of this. Takes about 30 seconds.",
+    body: 'Quick tour so you know how to get the most out of this. Takes about 30 seconds.',
   },
   {
     target: 'new-chat',
     title: 'Organize with multiple chats',
-    body: 'Create a separate chat for each topic — side effects, clinical trials, appointment prep. Each one remembers its own full conversation.',
+    body: 'Create a separate chat for each topic — side effects, clinical trials, appointment prep. Each one remembers its own conversation.',
     position: 'right',
   },
   {
-    target: 'profile-btn',
-    title: "The Settings panel — click here any time",
-    body: "This opens your settings. Here's what's inside:",
-    extra: SETTINGS_TABS,
+    target: 'settings-tab-profile',
+    settingsTab: 'profile',
+    title: 'Profile — your medical background',
+    body: 'The AI reads this on every message. Fill it in so responses are specific to the patient\'s diagnosis, treatment, and symptoms.',
     position: 'right',
-    wide: true,
+  },
+  {
+    target: 'settings-tab-personalization',
+    settingsTab: 'personalization',
+    title: 'Personalization — set the tone',
+    body: 'Choose Supportive & Simple, Balanced, or Clinical & Detailed. Add custom instructions the AI always follows.',
+    position: 'right',
+  },
+  {
+    target: 'settings-tab-account',
+    settingsTab: 'account',
+    title: 'Account',
+    body: 'View your email address and change your password any time.',
+    position: 'right',
+  },
+  {
+    target: 'settings-tab-data',
+    settingsTab: 'data',
+    title: 'Data controls',
+    body: 'Download everything as JSON, wipe all chat history, or permanently delete your account.',
+    position: 'right',
   },
   {
     target: 'attach-btn',
     title: 'Attach lab results & scan reports',
-    body: 'Upload PDFs or photos of blood work, imaging summaries, or pathology results. The AI will read and reference them when you ask questions.',
+    body: 'Upload PDFs or photos of blood work, imaging summaries, or pathology results. The AI will read and reference them.',
     position: 'top',
   },
   {
     target: 'chat-input',
     title: 'Ask anything here',
-    body: "Type your question and press Enter. Be specific — \"what do my neutrophil counts mean?\" or \"are there trials for relapsed Ewing's?\" The AI knows your patient's profile.",
+    body: "Type your question and press Enter. Be specific — the AI knows the patient's full profile.",
     position: 'top',
   },
 ];
 
 const PAD = 12;
 const CALLOUT_W = 288;
-const CALLOUT_W_WIDE = 340;
 
-export default function TutorialOverlay({ onDone }) {
+export default function TutorialOverlay({ onDone, onSettingsNav }) {
   const [step, setStep] = useState(0);
   const [targetRect, setTargetRect] = useState(null);
   const [win, setWin] = useState({ w: window.innerWidth, h: window.innerHeight });
@@ -66,6 +78,13 @@ export default function TutorialOverlay({ onDone }) {
 
   useLayoutEffect(measureTarget, [step, current.target]);
 
+  // Delayed re-measure so settings modal has time to render before we look for its tabs
+  useEffect(() => {
+    if (!current.target) return;
+    const t = setTimeout(measureTarget, 120);
+    return () => clearTimeout(t);
+  }, [step]);
+
   useEffect(() => {
     const handler = () => {
       setWin({ w: window.innerWidth, h: window.innerHeight });
@@ -76,7 +95,6 @@ export default function TutorialOverlay({ onDone }) {
   }, [step]);
 
   // Compute callout card position
-  const cardW = current.wide ? CALLOUT_W_WIDE : CALLOUT_W;
   let callout = {};
   if (!targetRect) {
     callout = { top: '50%', left: '50%', transform: 'translate(-50%,-50%)' };
@@ -85,31 +103,39 @@ export default function TutorialOverlay({ onDone }) {
     const pos = current.position || 'bottom';
     const ARROW_GAP = 14;
     if (pos === 'right') {
-      const estimatedH = current.wide ? 420 : 260;
-      const idealTop = top + height / 2 - estimatedH / 2;
+      const idealTop = top + height / 2 - 110;
       callout = {
-        top: Math.max(12, Math.min(win.h - estimatedH - 12, idealTop)),
+        top: Math.max(12, Math.min(win.h - 240, idealTop)),
         left: left + width + PAD + ARROW_GAP,
       };
     } else if (pos === 'top') {
-      const cardLeft = Math.max(12, Math.min(win.w - cardW - 12, left + width / 2 - cardW / 2));
+      const cardLeft = Math.max(12, Math.min(win.w - CALLOUT_W - 12, left + width / 2 - CALLOUT_W / 2));
       callout = { bottom: win.h - top + PAD + ARROW_GAP, left: cardLeft };
     } else {
-      const cardLeft = Math.max(12, Math.min(win.w - cardW - 12, left + width / 2 - cardW / 2));
+      const cardLeft = Math.max(12, Math.min(win.w - CALLOUT_W - 12, left + width / 2 - CALLOUT_W / 2));
       callout = { top: top + height + PAD + ARROW_GAP, left: cardLeft };
     }
   }
 
   function advance() {
-    if (isLast) {
+    const nextIndex = isLast ? null : step + 1;
+    if (nextIndex !== null) {
+      const next = STEPS[nextIndex];
+      if (next.settingsTab) {
+        onSettingsNav(next.settingsTab);
+      } else if (current.settingsTab) {
+        onSettingsNav(null);
+      }
+      setStep(nextIndex);
+    } else {
+      if (current.settingsTab) onSettingsNav(null);
       localStorage.setItem('tutorialDone', '1');
       onDone();
-    } else {
-      setStep(s => s + 1);
     }
   }
 
   function skip() {
+    if (current.settingsTab) onSettingsNav(null);
     localStorage.setItem('tutorialDone', '1');
     onDone();
   }
@@ -155,45 +181,27 @@ export default function TutorialOverlay({ onDone }) {
         />
       )}
 
-      {/* Callout card */}
+      {/* Callout card — flex-col so footer always stays visible */}
       <div
-        className="absolute bg-white rounded-2xl shadow-2xl p-5 pointer-events-auto overflow-y-auto"
-        style={{ width: cardW, maxHeight: 'calc(100vh - 24px)', ...callout }}
+        className="absolute bg-white rounded-2xl shadow-2xl pointer-events-auto flex flex-col"
+        style={{ width: CALLOUT_W, maxHeight: 'calc(100vh - 24px)', ...callout }}
       >
-        {/* Header row */}
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">
-            {step === 0 ? 'Quick Tour' : `Step ${step} of ${STEPS.length - 1}`}
-          </span>
-          <button
-            onClick={skip}
-            className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            Skip tour
-          </button>
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto p-5 pb-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">
+              {step === 0 ? 'Quick Tour' : `Step ${step} of ${STEPS.length - 1}`}
+            </span>
+            <button onClick={skip} className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors">
+              Skip tour
+            </button>
+          </div>
+          <h3 className="text-sm font-bold text-gray-900 mb-2 leading-snug">{current.title}</h3>
+          <p className="text-xs text-gray-600 leading-relaxed">{current.body}</p>
         </div>
 
-        <h3 className="text-sm font-bold text-gray-900 mb-2 leading-snug">{current.title}</h3>
-        <p className="text-xs text-gray-600 leading-relaxed mb-3">{current.body}</p>
-
-        {/* Settings-tab breakdown */}
-        {current.extra && (
-          <div className="mb-4 space-y-2.5 bg-gray-50 rounded-xl p-3 border border-gray-100">
-            {current.extra.map(({ icon, tab, desc }) => (
-              <div key={tab} className="flex gap-2.5 items-start">
-                <span className="text-sm leading-none mt-0.5 flex-shrink-0">{icon}</span>
-                <div className="min-w-0">
-                  <span className="text-xs font-semibold text-gray-800">{tab}</span>
-                  <span className="text-xs text-gray-500"> — {desc}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Footer row */}
-        <div className="flex items-center justify-between">
-          {/* Dot indicators */}
+        {/* Pinned footer */}
+        <div className="flex-shrink-0 flex items-center justify-between px-5 pb-4 pt-2">
           <div className="flex gap-1.5">
             {STEPS.map((_, i) => (
               <span

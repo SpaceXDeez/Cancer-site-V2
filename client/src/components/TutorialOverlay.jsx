@@ -1,22 +1,31 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
 
+const SETTINGS_TABS = [
+  { icon: '👤', tab: 'Profile',         desc: 'Set your display name and edit the full medical profile the AI reads on every message.' },
+  { icon: '✨', tab: 'Personalization', desc: "Pick the AI's tone (supportive / balanced / clinical) and add custom instructions it always follows." },
+  { icon: '🔒', tab: 'Account',         desc: 'View your email and change your password.' },
+  { icon: '📁', tab: 'Data controls',   desc: 'Download everything as JSON, delete all chats, or permanently delete your account.' },
+];
+
 const STEPS = [
   {
     target: null,
     title: 'Welcome to your AI support tool 👋',
-    body: "Quick 4-step tour so you know how to get the most out of this. Takes about 30 seconds.",
+    body: "Quick 5-step tour so you know how to get the most out of this. Takes about 30 seconds.",
   },
   {
     target: 'new-chat',
     title: 'Organize with multiple chats',
-    body: 'Create a separate chat for each topic — side effects, clinical trials, appointment prep. Each one remembers its own conversation.',
+    body: 'Create a separate chat for each topic — side effects, clinical trials, appointment prep. Each one remembers its own full conversation.',
     position: 'right',
   },
   {
     target: 'profile-btn',
-    title: 'Your patient profile is the key',
-    body: 'The AI reads your profile on every single message. The more you fill in — diagnosis, treatment phase, current medications — the more tailored and useful every answer will be.',
+    title: "The Settings panel — click here any time",
+    body: "This opens your settings. Here's what's inside:",
+    extra: SETTINGS_TABS,
     position: 'right',
+    wide: true,
   },
   {
     target: 'attach-btn',
@@ -34,6 +43,7 @@ const STEPS = [
 
 const PAD = 12;
 const CALLOUT_W = 288;
+const CALLOUT_W_WIDE = 340;
 
 export default function TutorialOverlay({ onDone }) {
   const [step, setStep] = useState(0);
@@ -66,6 +76,7 @@ export default function TutorialOverlay({ onDone }) {
   }, [step]);
 
   // Compute callout card position
+  const cardW = current.wide ? CALLOUT_W_WIDE : CALLOUT_W;
   let callout = {};
   if (!targetRect) {
     callout = { top: '50%', left: '50%', transform: 'translate(-50%,-50%)' };
@@ -75,14 +86,14 @@ export default function TutorialOverlay({ onDone }) {
     const ARROW_GAP = 14;
     if (pos === 'right') {
       callout = {
-        top: Math.max(12, Math.min(win.h - 200, top + height / 2 - 90)),
+        top: Math.max(12, Math.min(win.h - 260, top + height / 2 - 90)),
         left: left + width + PAD + ARROW_GAP,
       };
     } else if (pos === 'top') {
-      const cardLeft = Math.max(12, Math.min(win.w - CALLOUT_W - 12, left + width / 2 - CALLOUT_W / 2));
+      const cardLeft = Math.max(12, Math.min(win.w - cardW - 12, left + width / 2 - cardW / 2));
       callout = { bottom: win.h - top + PAD + ARROW_GAP, left: cardLeft };
     } else {
-      const cardLeft = Math.max(12, Math.min(win.w - CALLOUT_W - 12, left + width / 2 - CALLOUT_W / 2));
+      const cardLeft = Math.max(12, Math.min(win.w - cardW - 12, left + width / 2 - cardW / 2));
       callout = { top: top + height + PAD + ARROW_GAP, left: cardLeft };
     }
   }
@@ -145,7 +156,7 @@ export default function TutorialOverlay({ onDone }) {
       {/* Callout card */}
       <div
         className="absolute bg-white rounded-2xl shadow-2xl p-5 pointer-events-auto"
-        style={{ width: CALLOUT_W, ...callout }}
+        style={{ width: cardW, ...callout }}
       >
         {/* Header row */}
         <div className="flex items-center justify-between mb-2">
@@ -161,7 +172,22 @@ export default function TutorialOverlay({ onDone }) {
         </div>
 
         <h3 className="text-sm font-bold text-gray-900 mb-2 leading-snug">{current.title}</h3>
-        <p className="text-xs text-gray-600 leading-relaxed mb-4">{current.body}</p>
+        <p className="text-xs text-gray-600 leading-relaxed mb-3">{current.body}</p>
+
+        {/* Settings-tab breakdown */}
+        {current.extra && (
+          <div className="mb-4 space-y-2.5 bg-gray-50 rounded-xl p-3 border border-gray-100">
+            {current.extra.map(({ icon, tab, desc }) => (
+              <div key={tab} className="flex gap-2.5 items-start">
+                <span className="text-sm leading-none mt-0.5 flex-shrink-0">{icon}</span>
+                <div className="min-w-0">
+                  <span className="text-xs font-semibold text-gray-800">{tab}</span>
+                  <span className="text-xs text-gray-500"> — {desc}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Footer row */}
         <div className="flex items-center justify-between">

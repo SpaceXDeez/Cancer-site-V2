@@ -83,26 +83,32 @@ export default function HomePage({ isLoggedIn, user, onLoginClick, onStartChat }
             {isLoggedIn ? (
               <button
                 onClick={onStartChat}
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-xl transition-colors shadow-md"
+                className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg"
               >
                 Open AI Chat
               </button>
             ) : (
               <button
                 onClick={onLoginClick}
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-xl transition-colors shadow-md"
+                className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg"
               >
                 Get Started — It's Free
               </button>
             )}
-            <a
-              href="https://www.xit.org"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white text-sm font-medium rounded-xl transition-colors"
-            >
-              Learn about XIT Foundation
-            </a>
+          </div>
+          {/* NO ONE FIGHTS ALONE slogan */}
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <img
+              src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAVCAYAAABPPm7SAAADcUlEQVQ4T22TXWwUZRSGn29muz/d0nZruwW3XUvRNpa2iqj1AjWVeKUXRBOJV8YESSy3Yq+aEMASmrSSoFZJTOTKn3ihoFxoCMpFQwiGhAT7Y9nQbbv92Vmw3f/dmfnIzOxsG+O5mJmc7zvvec/7nhGGYUgpJW4IYT8pL49TXjiDqqaRnjDenisIfy/uXSGE/S0sAKfUBREsXeqk1likISpQAoKSZrJ+D9reuYYIHnCu2o0kQtd16XR1Q/DvrX6M+LQNoAaguCZZmpZ0vhxA6U9Xb9oAhq5Lm7dFzXrNNCFbupi5PUD34KeoqsLD1DoPfx+gY1BFBCYRO16vMMAaQXcq3VgM88uNFt54pQ/R+q3LFfN+F6K5CbmQQumZq06xpYGUmFKSi/cyMrbJ2McGNR0rzlHuJiQGobUbmVxG2b1q562ojuCoKyH1DKMTSY4eztPkr0PtXqY4VYs3ZMDOKOVsO97I1Up1hYFth5PCWHgaVWhc+KHEB4dKGL6jmIuT1DymQqiRzfIoDZH3ncsugEXfnknA2vIc4fx+Tn0J6Yzg7PEQhraKp9GD9NdDewJlm21VDWwWFTOKs514a5IMj6uMHA/jL9RSo86zUjjCrr5z9hJVa5w9qCBWrFxamCXCAATDHBvO8/lYC2Y8huzT8Kced13tsEV06dv1AkztPLmVz6hrC3JyvMDO5iJH3vagtM+6Pf7fRgdSYMbqydzLs2P/i0x+nUDTcowcK0HwQ2j6ZKuZy2CLkkTGo+DLQzZHIh4h0l3kx1+znJ7IcvuKgnhiA6iMYf9M21ZZ6vOQeYs1rYBSTBHKplGbQ6CWGHy3xLXvPMiCD7VrvdLuPwzM2ONMzQUYHkly/myQfW2bXL3+JAcPxrjxt4/Rc3kufWFAaAjRPGHXOAAW2uZXrPxzgiVNRZeCl54FMlnYo1GajuKvL/HHLQNZyPNqr4GydwOEf4uBeTfI6YtB+nsEN+/AR+8V2FC/oaP3ELn0A2qTe7j4k878fcGpoRKmXoe6V3NcMGOvkc/MUC4HaGhc5+c/a3jzgBdP12rV28Rfh9nVcJmhE5JUyuT7MQntF7bZaGjDXAnqOZP0UrdHnnIOKxebdOgq6xOf1Evf8xu6nXrAAHA0sV63VNE2T8p1W/PuSds7R2sF4EL+MkjxD6PkpN80jxoe8vVcsCfgAAAAASUVORK5CYII="
+              alt="Ewing's sarcoma awareness ribbon"
+              className="w-5 h-6 opacity-90"
+            />
+            <span className="text-yellow-300 font-semibold tracking-widest text-xs uppercase">No One Fights Alone</span>
+            <img
+              src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAVCAYAAABPPm7SAAADcUlEQVQ4T22TXWwUZRSGn29muz/d0nZruwW3XUvRNpa2iqj1AjWVeKUXRBOJV8YESSy3Yq+aEMASmrSSoFZJTOTKn3ihoFxoCMpFQwiGhAT7Y9nQbbv92Vmw3f/dmfnIzOxsG+O5mJmc7zvvec/7nhGGYUgpJW4IYT8pL49TXjiDqqaRnjDenisIfy/uXSGE/S0sAKfUBREsXeqk1likISpQAoKSZrJ+D9reuYYIHnCu2o0kQtd16XR1Q/DvrX6M+LQNoAaguCZZmpZ0vhxA6U9Xb9oAhq5Lm7dFzXrNNCFbupi5PUD34KeoqsLD1DoPfx+gY1BFBCYRO16vMMAaQXcq3VgM88uNFt54pQ/R+q3LFfN+F6K5CbmQQumZq06xpYGUmFKSi/cyMrbJ2McGNR0rzlHuJiQGobUbmVxG2b1q562ojuCoKyH1DKMTSY4eztPkr0PtXqY4VYs3ZMDOKOVsO97I1Up1hYFth5PCWHgaVWhc+KHEB4dKGL6jmIuT1DymQqiRzfIoDZH3ncsugEXfnknA2vIc4fx+Tn0J6Yzg7PEQhraKp9GD9NdDewJlm21VDWwWFTOKs514a5IMj6uMHA/jL9RSo86zUjjCrr5z9hJVa5w9qCBWrFxamCXCAATDHBvO8/lYC2Y8huzT8Kced13tsEV06dv1AkztPLmVz6hrC3JyvMDO5iJH3vagtM+6Pf7fRgdSYMbqydzLs2P/i0x+nUDTcowcK0HwQ2j6ZKuZy2CLkkTGo+DLQzZHIh4h0l3kx1+znJ7IcvuKgnhiA6iMYf9M21ZZ6vOQeYs1rYBSTBHKplGbQ6CWGHy3xLXvPMiCD7VrvdLuPwzM2ONMzQUYHkly/myQfW2bXL3+JAcPxrjxt4/Rc3kufWFAaAjRPGHXOAAW2uZXrPxzgiVNRZeCl54FMlnYo1GajuKvL/HHLQNZyPNqr4GydwOEf4uBeTfI6YtB+nsEN+/AR+8V2FC/oaP3ELn0A2qTe7j4k878fcGpoRKmXoe6V3NcMGOvkc/MUC4HaGhc5+c/a3jzgBdP12rV28Rfh9nVcJmhE5JUyuT7MQntF7bZaGjDXAnqOZP0UrdHnnIOKxebdOgq6xOf1Evf8xu6nXrAAHA0sV63VNE2T8p1W/PuSds7R2sF4EL+MkjxD6PkpN80jxoe8vVcsCfgAAAAASUVORK5CYII="
+              alt=""
+              className="w-5 h-6 opacity-90"
+            />
           </div>
         </div>
       </div>
@@ -217,6 +223,23 @@ export default function HomePage({ isLoggedIn, user, onLoginClick, onStartChat }
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
             </a>
+          </div>
+        </section>
+
+        {/* About */}
+        <section>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-3 border-b-2 border-blue-100">About this app</h2>
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-6">
+            <p className="text-gray-700 leading-relaxed mb-4">
+              This application was built by <strong className="text-gray-900">Dylan Rossi</strong>, an Ewing's sarcoma survivor.
+              Dylan built the app at 16, two years after completing his last treatment. He worked with his family on the idea with
+              a single goal: to help other families navigate their own fight with Ewing's sarcoma.
+            </p>
+            <p className="text-gray-700 leading-relaxed">
+              Dylan and his family have partnered with the <strong className="text-gray-900">XIT Foundation</strong> to spread the
+              word about the app across the Ewing's community and gather feedback on how it can be improved — because every family
+              deserves access to the best possible information.
+            </p>
           </div>
         </section>
 

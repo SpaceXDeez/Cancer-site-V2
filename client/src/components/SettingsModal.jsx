@@ -384,14 +384,14 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
               <>
                 <div className="flex items-center justify-between py-3 border-b border-gray-100">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Export my data</p>
+                    <p className="text-sm font-medium text-gray-900">Download my data</p>
                     <p className="text-xs text-gray-500 mt-0.5">Download your profile and all chat history as JSON.</p>
                   </div>
                   <button
                     onClick={exportData}
                     className="flex-shrink-0 px-4 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
-                    Export
+                    Download
                   </button>
                 </div>
 

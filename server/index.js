@@ -161,6 +161,10 @@ function buildPatientContext(profile) {
   add('Most Recent Scan Result', profile.lastScanResult);
   add('Date of Most Recent Scan', profile.lastScanDate);
   add('Performance Status', profile.performanceStatus);
+  if (profile.ctdnaTested) {
+    add('ctDNA Testing', profile.ctdnaTested);
+    add('ctDNA Details', profile.ctdnaDetails);
+  }
   if (profile.hasRelapsed === 'yes') {
     lines.push('Has Relapsed: Yes');
     add('Time to Relapse', profile.timeToRelapse);
@@ -173,9 +177,21 @@ function buildPatientContext(profile) {
     }
     add('Treatments After Relapse', profile.postRelapseTreatments);
   }
-  add('Current Symptoms', profile.currentSymptoms);
-  add('Current Side Effects', profile.currentSideEffects);
-  add('Current Medications', profile.currentMedications);
+  if (profile.currentSymptoms) {
+    let symptomLine = `Current Symptoms: ${profile.currentSymptoms}`;
+    if (profile.symptomsStartDate) symptomLine += ` (from ${profile.symptomsStartDate}${profile.symptomsEndDate ? ` to ${profile.symptomsEndDate}` : ' — ongoing'})`;
+    lines.push(symptomLine);
+  }
+  if (profile.currentSideEffects) {
+    let seLine = `Current Side Effects: ${profile.currentSideEffects}`;
+    if (profile.sideEffectsStartDate) seLine += ` (from ${profile.sideEffectsStartDate}${profile.sideEffectsEndDate ? ` to ${profile.sideEffectsEndDate}` : ' — ongoing'})`;
+    lines.push(seLine);
+  }
+  if (profile.currentMedications) {
+    let medLine = `Current Medications: ${profile.currentMedications}`;
+    if (profile.medicationsStartDate) medLine += ` (from ${profile.medicationsStartDate}${profile.medicationsEndDate ? ` to ${profile.medicationsEndDate}` : ' — ongoing'})`;
+    lines.push(medLine);
+  }
   add('Medication Allergies', profile.medicationAllergies);
   add('Other Health Conditions', profile.comorbidities);
   add('Treating Institution', profile.treatingInstitution);
@@ -203,7 +219,7 @@ function buildDocumentContext(docs) {
   return `\n\n--- UPLOADED DOCUMENTS ---\n${sections.join('\n\n')}\n--- END UPLOADED DOCUMENTS ---`;
 }
 
-function buildSystemPrompt(profile, docs) {
+function buildSystemPrompt(profile, docs, userDisplayName) {
   const settings = profile?._settings || {};
 
   const styleNote = {
@@ -215,7 +231,12 @@ function buildSystemPrompt(profile, docs) {
     ? `\n\nADDITIONAL USER INSTRUCTIONS: ${settings.customInstructions.trim()}`
     : '';
 
-  return `You are an AI assistant specialising in Ewing's sarcoma, created to help patients and families battling this disease. Introduce yourself as an AI-based support tool for Ewing's sarcoma patients and families on your first message in a new conversation.
+  // Distinguish the person using the app from the patient they may be supporting
+  const userNote = userDisplayName
+    ? `\n\nIMPORTANT: The person using this app is named ${userDisplayName}. The patient whose profile is below may be a different person (e.g. a child or family member). Always address the user as "${userDisplayName}", never by the patient's name.`
+    : '\n\nNote: The user of this app may be a caregiver or family member, not the patient themselves. Do not address the user by the patient\'s name.';
+
+  return `You are an AI assistant specialising in Ewing's sarcoma, created to help patients and families battling this disease. Introduce yourself as an AI-based support tool for Ewing's sarcoma patients and families on your first message in a new conversation.${userNote}
 
 You are knowledgeable about:
 - Ewing's sarcoma biology, diagnosis, staging, and pathology (EWSR1 fusions, histology, PET/CT/MRI imaging interpretation)
@@ -250,6 +271,7 @@ app.post('/api/chat', requireAuth, chatLimiter, async (req, res) => {
     const profile    = profileRow ? JSON.parse(profileRow.data) : {};
     const docs       = await db.getUserDocuments(req.user.userId);
     const history    = await db.getMessages(chatId);
+    const userDisplayName = profile?._settings?.displayName?.trim() || null;
 
     if (history.length > 200) {
       return res.status(400).json({ error: 'Conversation is too long. Please start a new chat.' });
@@ -265,7 +287,7 @@ app.post('/api/chat', requireAuth, chatLimiter, async (req, res) => {
     const response = await anthropic.messages.create({
       model: 'claude-opus-4-5',
       max_tokens: 2048,
-      system: buildSystemPrompt(profile, docs),
+      system: buildSystemPrompt(profile, docs, userDisplayName),
       messages: claudeMessages,
     });
 

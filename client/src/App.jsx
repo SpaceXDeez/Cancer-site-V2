@@ -20,6 +20,7 @@ export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [sidebarOpen, setSidebarOpen]       = useState(false);
   const [showSettings, setShowSettings]     = useState(false);
+  const [showReturnBanner, setShowReturnBanner] = useState(false);
 
   // Load profile + chats whenever the user logs in
   useEffect(() => {
@@ -42,6 +43,10 @@ export default function App() {
       if (Object.keys(loadedProfile).length === 0) {
         setIsFirstVisit(true);
         setShowQ(true);
+      } else if (!sessionStorage.getItem('returnBannerShown')) {
+        // Returning user with existing profile — remind once per session
+        setShowReturnBanner(true);
+        sessionStorage.setItem('returnBannerShown', '1');
       }
       if (loadedChats.length > 0) {
         setCurrentId(loadedChats[0].id);
@@ -223,6 +228,32 @@ export default function App() {
           onSave={handleSaveProfile}
           onClose={isFirstVisit ? null : () => setShowQ(false)}
         />
+      )}
+
+      {/* Return-user reminder banner — shown once per session */}
+      {showReturnBanner && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-white border border-blue-200 rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 max-w-sm w-[calc(100vw-2rem)]">
+          <svg className="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-xs text-gray-700 flex-1 leading-relaxed">
+            Keep your profile current — adding new symptoms, blood tests, treatments, or procedures helps the AI give better answers.
+          </p>
+          <div className="flex gap-2 flex-shrink-0">
+            <button
+              onClick={() => { setShowReturnBanner(false); setShowSettings(true); }}
+              className="text-xs text-blue-600 font-medium hover:text-blue-800 whitespace-nowrap"
+            >
+              Update
+            </button>
+            <button onClick={() => setShowReturnBanner(false)} className="text-gray-400 hover:text-gray-600">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
       )}
 
       {showSettings && (

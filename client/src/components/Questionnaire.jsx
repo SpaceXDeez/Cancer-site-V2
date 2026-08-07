@@ -406,6 +406,17 @@ function StatusPanel({ form, upd }) {
           '4 — Completely disabled', 'Unknown',
         ]} />
       </Field>
+
+      <Field label="ctDNA Testing" hint="Circulating tumor DNA — a liquid biopsy that detects tumor DNA in blood.">
+        <Radios value={form.ctdnaTested} onChange={v => upd('ctdnaTested', v)}
+          options={['Yes — positive', 'Yes — negative', 'Yes — result pending', 'Not tested', 'Unknown']} />
+      </Field>
+      {form.ctdnaTested && form.ctdnaTested.startsWith('Yes') && (
+        <Field label="ctDNA Details" hint="Testing lab, date, or any additional context.">
+          <TextInput value={form.ctdnaDetails} onChange={v => upd('ctdnaDetails', v)}
+            placeholder="e.g. Foundation Medicine, June 2025; EWSR1-FLI1 detected at 0.3% VAF" />
+        </Field>
+      )}
     </>
   );
 }
@@ -472,22 +483,46 @@ function SymptomsPanel({ form, upd }) {
     <>
       <SectionTitle title="Symptoms & Medications" subtitle="Current symptoms, side effects, and medications." />
 
-      <Field label="Current Symptoms">
+      <Field label="Symptoms" hint="Describe current symptoms.">
         <TextArea value={form.currentSymptoms} onChange={v => upd('currentSymptoms', v)}
           placeholder="e.g. Fatigue, pain at tumor site, shortness of breath, decreased appetite..." rows={3} />
       </Field>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 mb-5">
+        <Field label="Symptoms — Start Date">
+          <TextInput value={form.symptomsStartDate} onChange={v => upd('symptomsStartDate', v)} type="date" />
+        </Field>
+        <Field label="Symptoms — End Date" hint="Leave blank if ongoing.">
+          <TextInput value={form.symptomsEndDate} onChange={v => upd('symptomsEndDate', v)} type="date" />
+        </Field>
+      </div>
 
-      <Field label="Current Side Effects from Treatment"
+      <Field label="Side Effects from Treatment"
         hint="Side effects from chemotherapy, radiation, or surgery.">
         <TextArea value={form.currentSideEffects} onChange={v => upd('currentSideEffects', v)}
           placeholder="e.g. Nausea, mucositis, peripheral neuropathy, hearing loss, low counts..." rows={3} />
       </Field>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 mb-5">
+        <Field label="Side Effects — Start Date">
+          <TextInput value={form.sideEffectsStartDate} onChange={v => upd('sideEffectsStartDate', v)} type="date" />
+        </Field>
+        <Field label="Side Effects — End Date" hint="Leave blank if ongoing.">
+          <TextInput value={form.sideEffectsEndDate} onChange={v => upd('sideEffectsEndDate', v)} type="date" />
+        </Field>
+      </div>
 
       <Field label="Current Medications"
         hint="Include chemo drugs, supportive care, and any other medications.">
         <TextArea value={form.currentMedications} onChange={v => upd('currentMedications', v)}
           placeholder="e.g. Vincristine, Doxorubicin, Ondansetron (Zofran), G-CSF (Neupogen), Mesna..." rows={3} />
       </Field>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 mb-5">
+        <Field label="Medications — Start Date">
+          <TextInput value={form.medicationsStartDate} onChange={v => upd('medicationsStartDate', v)} type="date" />
+        </Field>
+        <Field label="Medications — End Date" hint="Leave blank if ongoing.">
+          <TextInput value={form.medicationsEndDate} onChange={v => upd('medicationsEndDate', v)} type="date" />
+        </Field>
+      </div>
 
       <Field label="Medication Allergies or Intolerances">
         <TextInput value={form.medicationAllergies} onChange={v => upd('medicationAllergies', v)}
@@ -575,9 +610,9 @@ const SECTION_FIELDS = {
   basics:     ['patientName','age','sex','location','height','weight'],
   diagnosis:  ['diagnosisDate','primaryTumorSite','tumorSize','diseaseExtent','ewsr1Fusion','ldh'],
   treatment:  ['treatmentPhase','chemoRegimens','cyclesCompleted','hadSurgery','hadRadiation','hadSCT'],
-  status:     ['currentStatus','chemoResponse','lastScanResult','lastScanDate','performanceStatus'],
+  status:     ['currentStatus','chemoResponse','lastScanResult','lastScanDate','performanceStatus','ctdnaTested'],
   relapse:    ['hasRelapsed','relapseDate','relapseSites','postRelapseTreatments'],
-  symptoms:   ['currentSymptoms','currentSideEffects','currentMedications','medicationAllergies'],
+  symptoms:   ['currentSymptoms','symptomsStartDate','currentSideEffects','sideEffectsStartDate','currentMedications','medicationsStartDate','medicationAllergies'],
   careteam:   ['treatingInstitution','oncologistName','inClinicalTrial','willingToTravel','insuranceType'],
   additional: ['mainConcerns','additionalContext'],
 };
@@ -594,6 +629,7 @@ function sectionHasData(sectionId, form) {
 export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }) {
   const [form, setForm]         = useState({ ...profile });
   const [active, setActive]     = useState('basics');
+  const [wizardStep, setWizardStep] = useState(0); // only used when isFirstVisit
 
   const upd = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
   const tog = (field, item)  => setForm(prev => {
@@ -604,7 +640,10 @@ export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }
   const panels = { basics: BasicsPanel, diagnosis: DiagnosisPanel, treatment: TreatmentPanel,
     status: StatusPanel, relapse: RelapsePanel, symptoms: SymptomsPanel,
     careteam: CareTeamPanel, additional: AdditionalPanel };
-  const ActivePanel = panels[active];
+
+  // In wizard mode the active section tracks the wizard step
+  const effectiveActive = isFirstVisit ? SECTIONS[wizardStep].id : active;
+  const ActivePanel = panels[effectiveActive];
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4">
@@ -614,9 +653,15 @@ export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }
         <div className="px-6 py-4 border-b border-gray-200 flex items-start justify-between flex-shrink-0">
           <div>
             <h2 className="text-lg font-bold text-gray-900">Patient Profile</h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              All fields are optional. The more you fill in, the more personalized the AI responses will be.
-            </p>
+            {isFirstVisit ? (
+              <p className="text-xs text-gray-500 mt-0.5">
+                Step {wizardStep + 1} of {SECTIONS.length} — {SECTIONS[wizardStep].label}
+              </p>
+            ) : (
+              <p className="text-xs text-gray-500 mt-0.5">
+                All fields are optional. The more you fill in, the more personalized the AI responses will be.
+              </p>
+            )}
           </div>
           {!isFirstVisit && onClose && (
             <button onClick={onClose} className="ml-4 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
@@ -627,92 +672,146 @@ export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }
           )}
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
-          {/* Desktop: side nav */}
-          <nav className="hidden sm:block w-52 border-r border-gray-100 py-3 flex-shrink-0 overflow-y-auto bg-gray-50/50">
-            {SECTIONS.map(s => {
-              const filled = sectionHasData(s.id, form);
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => setActive(s.id)}
-                  className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left transition-colors relative ${
-                    active === s.id
-                      ? 'bg-blue-50 text-blue-700 font-medium border-r-2 border-blue-600'
-                      : 'text-gray-600 hover:bg-white hover:text-gray-900'
-                  }`}
-                >
-                  <span className="text-base leading-none">{s.icon}</span>
-                  <span className="flex-1 leading-snug">{s.label}</span>
-                  {filled && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" title="Has data" />
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-
-          {/* Mobile: horizontal scrollable section tabs */}
-          <div className="sm:hidden flex flex-col flex-1 min-h-0">
-            <div className="flex-shrink-0 border-b border-gray-100 overflow-x-auto">
-              <div className="flex px-3 gap-1 py-1.5">
-                {SECTIONS.map(s => {
-                  const filled = sectionHasData(s.id, form);
-                  return (
-                    <button
-                      key={s.id}
-                      onClick={() => setActive(s.id)}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs whitespace-nowrap transition-colors flex-shrink-0 ${
-                        active === s.id
-                          ? 'bg-blue-50 text-blue-700 font-medium'
-                          : 'text-gray-500 hover:text-gray-900'
-                      }`}
-                    >
-                      <span>{s.icon}</span>
-                      {s.label}
-                      {filled && <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              <ActivePanel form={form} upd={upd} tog={tog} />
+        {/* Profile importance callout — wizard first step only */}
+        {isFirstVisit && wizardStep === 0 && (
+          <div className="flex-shrink-0 bg-blue-50 border-b border-blue-100 px-6 py-3">
+            <div className="flex items-start gap-2.5">
+              <svg className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-xs text-blue-800 leading-relaxed">
+                <strong>The more you fill in, the better the AI can help.</strong> Every detail you provide — diagnosis date, treatment phase, current medications — lets the AI tailor its answers to your specific situation. All fields are optional; fill in what you know and skip the rest.
+              </p>
             </div>
           </div>
+        )}
 
-          {/* Desktop: form body */}
-          <div className="hidden sm:block flex-1 overflow-y-auto p-6">
-            <ActivePanel form={form} upd={upd} tog={tog} />
+        <div className="flex flex-1 overflow-hidden">
+          {/* Desktop: side nav — hidden in wizard mode */}
+          {!isFirstVisit && (
+            <nav className="hidden sm:block w-52 border-r border-gray-100 py-3 flex-shrink-0 overflow-y-auto bg-gray-50/50">
+              {SECTIONS.map(s => {
+                const filled = sectionHasData(s.id, form);
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => setActive(s.id)}
+                    className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left transition-colors relative ${
+                      active === s.id
+                        ? 'bg-blue-50 text-blue-700 font-medium border-r-2 border-blue-600'
+                        : 'text-gray-600 hover:bg-white hover:text-gray-900'
+                    }`}
+                  >
+                    <span className="text-base leading-none">{s.icon}</span>
+                    <span className="flex-1 leading-snug">{s.label}</span>
+                    {filled && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" title="Has data" />
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+          )}
+
+          {/* Mobile: horizontal scrollable section tabs — hidden in wizard mode */}
+          {!isFirstVisit && (
+            <div className="sm:hidden flex flex-col flex-1 min-h-0">
+              <div className="flex-shrink-0 border-b border-gray-100 overflow-x-auto">
+                <div className="flex px-3 gap-1 py-1.5">
+                  {SECTIONS.map(s => {
+                    const filled = sectionHasData(s.id, form);
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => setActive(s.id)}
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs whitespace-nowrap transition-colors flex-shrink-0 ${
+                          active === s.id
+                            ? 'bg-blue-50 text-blue-700 font-medium'
+                            : 'text-gray-500 hover:text-gray-900'
+                        }`}
+                      >
+                        <span>{s.icon}</span>
+                        {s.label}
+                        {filled && <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4">
+                <ActivePanel form={form} upd={upd} tog={tog} />
+              </div>
+            </div>
+          )}
+
+          {/* Form body — full width in wizard mode, desktop-only otherwise */}
+          <div className={`${isFirstVisit ? 'flex' : 'hidden sm:flex'} flex-col flex-1 overflow-hidden`}>
+            <div className="flex-1 overflow-y-auto p-6">
+              <ActivePanel form={form} upd={upd} tog={tog} />
+            </div>
           </div>
         </div>
 
         {/* Footer */}
         <div className="px-6 py-3 border-t border-gray-200 flex items-center justify-between flex-shrink-0 bg-gray-50 rounded-b-2xl">
-          <div className="flex items-center gap-3">
-            {isFirstVisit && (
-              <button
-                onClick={() => onSave({})}
-                className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
-              >
-                Skip for now
-              </button>
-            )}
-          </div>
-          <div className="flex gap-2">
-            {!isFirstVisit && onClose && (
-              <button onClick={onClose}
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
-                Cancel
-              </button>
-            )}
-            <button
-              onClick={() => onSave(form)}
-              className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-            >
-              {isFirstVisit ? 'Save & Start Chatting' : 'Save Profile'}
-            </button>
-          </div>
+          {isFirstVisit ? (
+            /* Wizard footer */
+            <>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => onSave({})}
+                  className="text-sm text-gray-400 hover:text-gray-600 underline transition-colors"
+                >
+                  Skip for now
+                </button>
+              </div>
+              <div className="flex gap-2">
+                {wizardStep > 0 && (
+                  <button
+                    onClick={() => setWizardStep(s => s - 1)}
+                    className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    ← Back
+                  </button>
+                )}
+                {wizardStep < SECTIONS.length - 1 ? (
+                  <button
+                    onClick={() => setWizardStep(s => s + 1)}
+                    className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                  >
+                    Next →
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => onSave(form)}
+                    className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                  >
+                    Save &amp; Start Chatting
+                  </button>
+                )}
+              </div>
+            </>
+          ) : (
+            /* Normal footer */
+            <>
+              <div className="flex items-center gap-3" />
+              <div className="flex gap-2">
+                {onClose && (
+                  <button onClick={onClose}
+                    className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                    Cancel
+                  </button>
+                )}
+                <button
+                  onClick={() => onSave(form)}
+                  className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                  Save Profile
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

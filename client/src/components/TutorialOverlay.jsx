@@ -4,7 +4,7 @@ const STEPS = [
   {
     target: null,
     title: 'Welcome to your AI support tool 👋',
-    body: 'Quick tour so you know how to get the most out of this. Takes about 30 seconds.',
+    body: "Let's take a quick tour so you know how to get the most out of this.",
   },
   {
     target: 'new-chat',
@@ -77,6 +77,12 @@ export default function TutorialOverlay({ onDone, onSettingsNav }) {
   }
 
   useLayoutEffect(measureTarget, [step, current.target]);
+
+  // Close any open settings on mount; clean up on unmount
+  useEffect(() => {
+    onSettingsNav(null);
+    return () => onSettingsNav(null);
+  }, []);
 
   // Delayed re-measure so settings modal has time to render before we look for its tabs
   useEffect(() => {

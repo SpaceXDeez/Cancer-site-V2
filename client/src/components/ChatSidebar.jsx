@@ -80,6 +80,7 @@ export default function ChatSidebar({
       {/* New chat */}
       <div className="px-3 pt-1 pb-1">
         <button
+          data-tutorial="new-chat"
           onClick={onNewChat}
           className="w-full flex items-center justify-center gap-1.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
         >
@@ -166,6 +167,7 @@ export default function ChatSidebar({
       {/* Profile button — opens unified settings panel */}
       <div className="px-3 py-3 border-t border-slate-700/60 space-y-1">
         <button
+          data-tutorial="profile-btn"
           onClick={onOpenProfile}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition-colors group"
         >

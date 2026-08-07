@@ -6,6 +6,7 @@ import ChatWindow     from './components/ChatWindow.jsx';
 import Questionnaire  from './components/Questionnaire.jsx';
 import LoginModal     from './components/LoginModal.jsx';
 import SettingsModal  from './components/SettingsModal.jsx';
+import TutorialOverlay from './components/TutorialOverlay.jsx';
 
 export default function App() {
   const { token, user, authFetch, logout } = useAuth();
@@ -21,6 +22,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen]       = useState(false);
   const [showSettings, setShowSettings]     = useState(false);
   const [showReturnBanner, setShowReturnBanner] = useState(false);
+  const [showTutorial, setShowTutorial]         = useState(false);
 
   // Load profile + chats whenever the user logs in
   useEffect(() => {
@@ -94,10 +96,15 @@ export default function App() {
       if (!res.ok) throw new Error(`Failed to save profile (${res.status})`);
       setProfile(newProfile);
       setShowQ(false);
+      const wasFirst = isFirstVisit;
       setIsFirstVisit(false);
       if (chats.length === 0) handleNewChat();
+      // Show tutorial once for new users after they finish the questionnaire
+      if (wasFirst && !localStorage.getItem('tutorialDone')) {
+        setTimeout(() => setShowTutorial(true), 600);
+      }
     } catch (err) { console.error(err); }
-  }, [authFetch, chats.length, handleNewChat]);
+  }, [authFetch, chats.length, handleNewChat, isFirstVisit]);
 
   const handleUpdateProfile = useCallback(async (updates) => {
     const merged = { ...profile, ...updates };
@@ -231,8 +238,7 @@ export default function App() {
       )}
 
       {/* Return-user reminder banner — shown once per session */}
-      {showReturnBanner && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-white border border-blue-200 rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 max-w-sm w-[calc(100vw-2rem)]">
+      {showReturnBanner && (        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-white border border-blue-200 rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 max-w-sm w-[calc(100vw-2rem)]">
           <svg className="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -267,6 +273,10 @@ export default function App() {
           onOpenQuestionnaire={() => { setShowSettings(false); setShowQ(true); }}
           onClose={() => setShowSettings(false)}
         />
+      )}
+
+      {showTutorial && (
+        <TutorialOverlay onDone={() => setShowTutorial(false)} />
       )}
     </div>
   );

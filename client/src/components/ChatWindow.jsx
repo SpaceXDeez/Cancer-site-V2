@@ -293,7 +293,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
       )}
 
       {/* Input */}
-      <div className="flex-shrink-0 border-t border-gray-200 px-4 pb-4 pt-3 bg-white">
+      <div className="flex-shrink-0 border-t border-gray-100 px-4 pb-5 pt-4 bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
         <div className="max-w-3xl mx-auto">
 
           {/* Attachment chip */}
@@ -324,7 +324,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
             </div>
           )}
 
-          <div className="flex items-end gap-2 bg-gray-50 border border-gray-300 rounded-2xl px-4 py-2.5 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-300 transition-all">
+          <div data-tutorial="chat-input" className="flex items-end gap-2 bg-white border-2 border-gray-200 rounded-2xl px-4 py-3 shadow-md focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
             {/* Hidden file input */}
             <input
               ref={fileInputRef}
@@ -335,10 +335,11 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
             />
             {/* Paperclip button */}
             <button
+              data-tutorial="attach-btn"
               onClick={() => fileInputRef.current?.click()}
               disabled={loading || uploading || messages === null}
               title="Attach a PDF or image"
-              className="flex-shrink-0 text-gray-400 hover:text-blue-500 disabled:opacity-30 transition-colors self-end mb-0.5"
+              className="flex-shrink-0 text-blue-400 hover:text-blue-600 disabled:opacity-30 transition-colors self-end mb-0.5"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -353,19 +354,19 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
               disabled={loading || messages === null}
               placeholder="Ask about treatments, side effects, clinical trials, or anything about Ewing's sarcoma…"
               rows={1}
-              className="flex-1 bg-transparent outline-none resize-none text-sm text-gray-800 placeholder-gray-400 leading-relaxed"
+              className="flex-1 bg-transparent outline-none resize-none text-sm text-gray-900 placeholder-gray-500 leading-relaxed"
             />
             <button
               onClick={() => send(input)}
               disabled={(!input.trim() && !attachment) || loading || uploading || messages === null}
-              className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 disabled:opacity-40 hover:bg-blue-700 transition-colors self-end mb-0.5"
+              className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 disabled:opacity-30 hover:bg-blue-700 transition-colors self-end"
             >
               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
               </svg>
             </button>
           </div>
-          <p className="text-xs text-gray-400 text-center mt-1.5">
+          <p className="text-xs text-gray-500 text-center mt-2">
             Enter to send · Shift+Enter for new line · All responses are AI-generated
           </p>
         </div>

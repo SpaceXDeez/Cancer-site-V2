@@ -85,8 +85,10 @@ export default function TutorialOverlay({ onDone }) {
     const pos = current.position || 'bottom';
     const ARROW_GAP = 14;
     if (pos === 'right') {
+      const estimatedH = current.wide ? 420 : 260;
+      const idealTop = top + height / 2 - estimatedH / 2;
       callout = {
-        top: Math.max(12, Math.min(win.h - 260, top + height / 2 - 90)),
+        top: Math.max(12, Math.min(win.h - estimatedH - 12, idealTop)),
         left: left + width + PAD + ARROW_GAP,
       };
     } else if (pos === 'top') {
@@ -155,8 +157,8 @@ export default function TutorialOverlay({ onDone }) {
 
       {/* Callout card */}
       <div
-        className="absolute bg-white rounded-2xl shadow-2xl p-5 pointer-events-auto"
-        style={{ width: cardW, ...callout }}
+        className="absolute bg-white rounded-2xl shadow-2xl p-5 pointer-events-auto overflow-y-auto"
+        style={{ width: cardW, maxHeight: 'calc(100vh - 24px)', ...callout }}
       >
         {/* Header row */}
         <div className="flex items-center justify-between mb-2">

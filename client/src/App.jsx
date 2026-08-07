@@ -197,7 +197,11 @@ export default function App() {
         onSelectChat={(id) => { setCurrentId(id); setView('chat'); closeSidebar(); }}
         onDeleteChat={handleDeleteChat}
         onRenameChat={handleRenameChat}
-        onOpenProfile={() => { setShowSettings(true); closeSidebar(); }}
+        onOpenProfile={() => {
+          // Don't open settings over the first-visit questionnaire
+          if (showQ && isFirstVisit) return;
+          setShowSettings(true); closeSidebar();
+        }}
         onLogout={logout}
         onSetView={(v) => { setView(v); closeSidebar(); }}
         onCloseSidebar={closeSidebar}
@@ -262,7 +266,7 @@ export default function App() {
         </div>
       )}
 
-      {showSettings && (
+      {showSettings && !showQ && (
         <SettingsModal
           user={user}
           profile={profile}
@@ -275,7 +279,7 @@ export default function App() {
         />
       )}
 
-      {showTutorial && (
+      {showTutorial && !showQ && (
         <TutorialOverlay onDone={() => setShowTutorial(false)} />
       )}
     </div>

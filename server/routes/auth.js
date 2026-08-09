@@ -14,6 +14,9 @@ router.post('/register', async (req, res) => {
   if (typeof password !== 'string' || password.length < 8) {
     return res.status(400).json({ error: 'Password must be at least 8 characters.' });
   }
+  if (isTest === true && process.env.ALLOW_TEST_ACCOUNTS !== 'true') {
+    return res.status(403).json({ error: 'Test accounts are only available on the staging environment.' });
+  }
   try {
     const hash   = await bcrypt.hash(password, 12);
     const result = await db.createUser(email.toLowerCase().trim(), hash, isTest === true);
@@ -39,6 +42,9 @@ router.post('/login', async (req, res) => {
     const valid = user ? await bcrypt.compare(password, user.password_hash)
                        : await bcrypt.compare(password, dummyHash).then(() => false);
     if (!user || !valid) return res.status(401).json({ error: 'Invalid email or password.' });
+    if (user.is_test && process.env.ALLOW_TEST_ACCOUNTS !== 'true') {
+      return res.status(403).json({ error: 'Test accounts are only available on the staging environment.' });
+    }
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '30d' });
     res.json({ token, user: { id: user.id, email: user.email, isTest: !!user.is_test } });
   } catch (err) {

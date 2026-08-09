@@ -7,6 +7,7 @@ import Questionnaire  from './components/Questionnaire.jsx';
 import LoginModal     from './components/LoginModal.jsx';
 import SettingsModal  from './components/SettingsModal.jsx';
 import TutorialOverlay from './components/TutorialOverlay.jsx';
+import ErrorBoundary   from './components/ErrorBoundary.jsx';
 
 export default function App() {
   const { token, user, authFetch, logout } = useAuth();
@@ -231,14 +232,16 @@ export default function App() {
             }}
           />
         ) : currentChat ? (
-          <ChatWindow
-            key={currentChat.id}
-            chat={currentChat}
-            profile={profile}
-            authFetch={authFetch}
-            onRenameChat={(name) => handleRenameChat(currentChat.id, name)}
-            onUpdateProfile={handleUpdateProfile}
-          />
+          <ErrorBoundary key={currentChat.id}>
+            <ChatWindow
+              key={currentChat.id}
+              chat={currentChat}
+              profile={profile}
+              authFetch={authFetch}
+              onRenameChat={(name) => handleRenameChat(currentChat.id, name)}
+              onUpdateProfile={handleUpdateProfile}
+            />
+          </ErrorBoundary>
         ) : (
           <EmptyState onNewChat={handleNewChat} />
         )}
@@ -293,7 +296,11 @@ export default function App() {
       )}
 
       {showTutorial && !showQ && (
-        <TutorialOverlay onDone={() => setShowTutorial(false)} onSettingsNav={handleSettingsNav} />
+        <TutorialOverlay
+          onDone={() => setShowTutorial(false)}
+          onSettingsNav={handleSettingsNav}
+          onOpenSidebar={() => setSidebarOpen(true)}
+        />
       )}
     </div>
   );

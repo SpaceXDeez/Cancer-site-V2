@@ -7,8 +7,7 @@ const STEPS = [
     body: "Let's take a quick tour so you know how to get the most out of this.",
   },
   {
-    target: 'new-chat',
-    title: 'Organize with multiple chats',
+    target: 'new-chat',    requiresSidebar: true,    title: 'Organize with multiple chats',
     body: 'Create a separate chat for each topic — side effects, clinical trials, appointment prep. Each one remembers its own conversation.',
     position: 'right',
   },
@@ -57,10 +56,13 @@ const STEPS = [
 const PAD = 12;
 const CALLOUT_W = 288;
 
-export default function TutorialOverlay({ onDone, onSettingsNav }) {
+export default function TutorialOverlay({ onDone, onSettingsNav, onOpenSidebar }) {
   const [step, setStep] = useState(0);
   const [targetRect, setTargetRect] = useState(null);
-  const [win, setWin] = useState({ w: window.innerWidth, h: window.innerHeight });
+  const [win, setWin] = useState({
+    w: window.innerWidth,
+    h: window.visualViewport?.height ?? window.innerHeight,
+  });
 
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
@@ -68,12 +70,14 @@ export default function TutorialOverlay({ onDone, onSettingsNav }) {
   function measureTarget() {
     if (!current.target) { setTargetRect(null); return; }
     const el = document.querySelector(`[data-tutorial="${current.target}"]`);
-    if (el) {
-      const r = el.getBoundingClientRect();
-      setTargetRect({ top: r.top, left: r.left, width: r.width, height: r.height });
-    } else {
+    if (!el) { setTargetRect(null); return; }
+    const r = el.getBoundingClientRect();
+    // Treat as missing if entirely outside the visible viewport (e.g. hidden sidebar on mobile)
+    if (r.right < 0 || r.bottom < 0 || r.left > win.w || r.top > win.h) {
       setTargetRect(null);
+      return;
     }
+    setTargetRect({ top: r.top, left: r.left, width: r.width, height: r.height });
   }
 
   useLayoutEffect(measureTarget, [step, current.target]);
@@ -84,20 +88,28 @@ export default function TutorialOverlay({ onDone, onSettingsNav }) {
     return () => onSettingsNav(null);
   }, []);
 
-  // Delayed re-measure so settings modal has time to render before we look for its tabs
+  // Delayed re-measure — longer delay for steps that need a sidebar/modal to animate in
   useEffect(() => {
     if (!current.target) return;
-    const t = setTimeout(measureTarget, 120);
+    const delay = current.requiresSidebar ? 400 : 120;
+    const t = setTimeout(measureTarget, delay);
     return () => clearTimeout(t);
   }, [step]);
 
   useEffect(() => {
     const handler = () => {
-      setWin({ w: window.innerWidth, h: window.innerHeight });
+      setWin({
+        w: window.innerWidth,
+        h: window.visualViewport?.height ?? window.innerHeight,
+      });
       measureTarget();
     };
     window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
+    window.visualViewport?.addEventListener('resize', handler);
+    return () => {
+      window.removeEventListener('resize', handler);
+      window.visualViewport?.removeEventListener('resize', handler);
+    };
   }, [step]);
 
   // Compute callout card position
@@ -110,9 +122,10 @@ export default function TutorialOverlay({ onDone, onSettingsNav }) {
     const ARROW_GAP = 14;
     if (pos === 'right') {
       const idealTop = top + height / 2 - 110;
+      const idealLeft = left + width + PAD + ARROW_GAP;
       callout = {
         top: Math.max(12, Math.min(win.h - 240, idealTop)),
-        left: left + width + PAD + ARROW_GAP,
+        left: Math.min(win.w - CALLOUT_W - 12, idealLeft), // clamp so card doesn't bleed off right edge
       };
     } else if (pos === 'top') {
       const cardLeft = Math.max(12, Math.min(win.w - CALLOUT_W - 12, left + width / 2 - CALLOUT_W / 2));
@@ -127,6 +140,7 @@ export default function TutorialOverlay({ onDone, onSettingsNav }) {
     const nextIndex = isLast ? null : step + 1;
     if (nextIndex !== null) {
       const next = STEPS[nextIndex];
+      if (next.requiresSidebar) onOpenSidebar?.();
       if (next.settingsTab) {
         onSettingsNav(next.settingsTab);
       } else if (current.settingsTab) {

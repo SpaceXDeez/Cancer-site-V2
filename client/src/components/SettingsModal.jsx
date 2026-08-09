@@ -168,6 +168,7 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
             {TABS.map(t => (
               <button
                 key={t.id}
+                data-tutorial={`settings-tab-${t.id}`}
                 onClick={() => setTab(t.id)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors flex-shrink-0 ${
                   tab === t.id

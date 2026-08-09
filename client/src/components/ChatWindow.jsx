@@ -10,23 +10,6 @@ const STARTER_PROMPTS = [
   { label: 'Late effects of treatment',      text: 'What are the potential long-term and late effects of Ewing\'s sarcoma treatment on a child\'s development and health?' },
 ];
 
-const INTRO_CONTENT = `Hello! I'm an AI-based support assistant dedicated to helping patients and families battling **Ewing's sarcoma**.
-
-I can help you with:
-- **Treatment options** — VDC/IE chemotherapy, surgery, radiation, stem cell transplant, and emerging therapies
-- **Understanding your diagnosis** — tumor pathology, staging, EWSR1 fusions, imaging results explained
-- **Side effects** — managing side effects from chemo drugs (vincristine, doxorubicin, ifosfamide, etoposide, etc.)
-- **Clinical trials** — identifying studies your patient may be eligible for, with NCT numbers when possible
-- **Prognosis** — understanding what factors affect outcomes and what the data shows
-- **Questions for your doctor** — preparing for appointments and second opinions
-- **Survivorship & late effects** — life after treatment, long-term monitoring, fertility preservation
-
-If you've filled out the patient profile (click the profile button in the sidebar), I'll use that information to give you more tailored answers.
-
-**Important:** All of my responses are AI-generated and for educational purposes only. Please make all treatment decisions in close collaboration with your medical oncology team.
-
-How can I help you today?`;
-
 export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onUpdateProfile }) {
   const [messages, setMessages] = useState(null);
   const [input, setInput]       = useState('');
@@ -36,11 +19,12 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
   const [uploading, setUploading]           = useState(false);
   const [uploadError, setUploadError]       = useState(null);
   const [profileSuggestion, setProfileSuggestion] = useState(null); // { description } — auto-saved
-  const bottomRef         = useRef(null);
-  const aiResponseRef     = useRef(null);
-  const prevLoadingRef    = useRef(false);
-  const textareaRef       = useRef(null);
-  const fileInputRef      = useRef(null);
+  const bottomRef            = useRef(null);
+  const aiResponseRef        = useRef(null);
+  const prevLoadingRef       = useRef(false);
+  const textareaRef          = useRef(null);
+  const fileInputRef         = useRef(null);
+  const profileToastTimer    = useRef(null);
 
   useEffect(() => {
     authFetch(`/api/chats/${chat.id}/messages`)
@@ -126,7 +110,8 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
       if (data.contextSuggestion) {
         onUpdateProfile(data.contextSuggestion.fields); // auto-save without asking
         setProfileSuggestion({ description: data.contextSuggestion.description });
-        setTimeout(() => setProfileSuggestion(null), 6000); // auto-dismiss
+        clearTimeout(profileToastTimer.current);
+        profileToastTimer.current = setTimeout(() => setProfileSuggestion(null), 6000);
       }
     } catch (err) {
       setError(err.message);

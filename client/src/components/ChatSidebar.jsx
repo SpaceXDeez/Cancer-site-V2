@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function ChatSidebar({
   chats, currentChatId, profile, user, view, sidebarOpen,
@@ -7,6 +7,9 @@ export default function ChatSidebar({
   const [renamingId, setRenamingId]   = useState(null);
   const [renameVal, setRenameVal]     = useState('');
   const [confirmLogout, setConfirmLogout] = useState(false);
+
+  // Clear stale confirm state whenever the sidebar is closed
+  useEffect(() => { if (!sidebarOpen) setConfirmLogout(false); }, [sidebarOpen]);
 
   function startRename(chat, e) {
     e.stopPropagation();

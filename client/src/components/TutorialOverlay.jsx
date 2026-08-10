@@ -118,14 +118,18 @@ export default function TutorialOverlay({ onDone, onSettingsNav, onOpenSidebar }
     callout = { top: '50%', left: '50%', transform: 'translate(-50%,-50%)' };
   } else {
     const { top, left, width, height } = targetRect;
-    const pos = current.position || 'bottom';
+    // Auto-fallback: 'right' with no room (e.g. full-width sidebar on mobile) → top/bottom
+    let pos = current.position || 'bottom';
+    if (pos === 'right' && left + width + CALLOUT_W + PAD * 2 > win.w) {
+      pos = (top + height / 2) < win.h / 2 ? 'bottom' : 'top';
+    }
     const ARROW_GAP = 14;
     if (pos === 'right') {
       const idealTop = top + height / 2 - 110;
       const idealLeft = left + width + PAD + ARROW_GAP;
       callout = {
         top: Math.max(12, Math.min(win.h - 240, idealTop)),
-        left: Math.min(win.w - CALLOUT_W - 12, idealLeft), // clamp so card doesn't bleed off right edge
+        left: Math.min(win.w - CALLOUT_W - 12, idealLeft),
       };
     } else if (pos === 'top') {
       const cardLeft = Math.max(12, Math.min(win.w - CALLOUT_W - 12, left + width / 2 - CALLOUT_W / 2));

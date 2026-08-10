@@ -416,6 +416,9 @@ app.post('/api/upload', requireAuth, dailyUploadLimiter, uploadLimiter, (req, re
   }
 });
 
+// ── Health check (no auth, no CORS) ──────────────────────────────────────────
+app.get('/health', (_req, res) => res.json({ status: 'ok', env: process.env.NODE_ENV }));
+
 // ── Serve React app in production ─────────────────────────────────────────────
 if (isProd) {
   const distPath = path.join(__dirname, '../client/dist');

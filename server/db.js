@@ -88,6 +88,12 @@ async function initDb() {
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false },
+      connectionTimeoutMillis: 10000,
+    });
+    // Test connection before proceeding so startup errors are logged clearly
+    await pool.query('SELECT 1').catch(err => {
+      console.error('PostgreSQL connection failed. DATABASE_URL =', process.env.DATABASE_URL?.replace(/:\/\/[^@]+@/, '://***@'));
+      throw err;
     });
     await pool.query(PG_SCHEMA);
     // Add column for existing DBs that predate this field

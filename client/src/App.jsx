@@ -215,6 +215,7 @@ export default function App() {
           if (showQ && isFirstVisit) return;
           setShowSettings(true); closeSidebar();
         }}
+        onOpenMedicalProfile={() => { setShowQ(true); closeSidebar(); }}
         onLogout={logout}
         onSetView={(v) => { setView(v); closeSidebar(); }}
         onCloseSidebar={closeSidebar}

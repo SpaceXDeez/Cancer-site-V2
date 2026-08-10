@@ -12,10 +12,10 @@ const STEPS = [
     position: 'right',
   },
   {
-    target: 'settings-tab-profile',
-    settingsTab: 'profile',
-    title: 'Profile — your medical background',
-    body: 'The AI reads this on every message. Fill it in so responses are specific to the patient\'s diagnosis, treatment, and symptoms.',
+    target: 'medical-profile-btn',
+    requiresSidebar: true,
+    title: 'Fill in your medical profile',
+    body: 'The AI reads this on every message. Add diagnosis, treatment, and symptoms so every answer is specific to your situation.',
     position: 'right',
   },
   {

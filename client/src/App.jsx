@@ -105,9 +105,8 @@ export default function App() {
       const wasFirst = isFirstVisit;
       setIsFirstVisit(false);
       if (chats.length === 0) handleNewChat();
-      // Always show tutorial for first-time users regardless of any stale localStorage flag
-      if (wasFirst) {
-        localStorage.removeItem('tutorialDone');
+      // Only show tutorial if they haven't completed it before
+      if (wasFirst && !localStorage.getItem('tutorialDone')) {
         setTimeout(() => setShowTutorial(true), 900);
       }
     } catch (err) { console.error(err); }

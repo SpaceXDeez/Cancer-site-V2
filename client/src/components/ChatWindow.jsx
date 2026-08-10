@@ -275,7 +275,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
       )}
 
       {/* Input */}
-      <div className="flex-shrink-0 border-t border-gray-100 px-4 pb-5 pt-4 bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+      <div className="flex-shrink-0 border-t border-gray-100 px-4 pt-4 bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.06)]" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
         <div className="max-w-3xl mx-auto">
 
           {/* Attachment chip */}
@@ -349,7 +349,9 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
             </button>
           </div>
           <p className="text-xs text-gray-500 text-center mt-2">
-            Enter to send · Shift+Enter for new line · All responses are AI-generated
+            <span className="hidden sm:inline">Enter to send · Shift+Enter for new line · </span>
+            <span className="sm:hidden">Tap the arrow to send · </span>
+            All responses are AI-generated
           </p>
         </div>
       </div>
@@ -359,7 +361,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
         <div className="flex-shrink-0 px-4 pb-4 bg-white">
           <div className="max-w-3xl mx-auto">
             <p className="text-xs text-gray-400 mb-2 text-center">Suggested questions to get started</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {STARTER_PROMPTS.map(p => (
                 <button
                   key={p.label}

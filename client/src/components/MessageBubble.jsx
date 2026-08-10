@@ -86,7 +86,7 @@ function CopyButton({ text }) {
     <button
       onClick={handleCopy}
       title={copied ? 'Copied!' : 'Copy response'}
-      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg bg-white/80 hover:bg-white text-gray-500 hover:text-gray-800 shadow-sm border border-gray-200"
+      className="absolute top-2 right-2 opacity-40 sm:opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg bg-white/80 hover:bg-white text-gray-500 hover:text-gray-800 shadow-sm border border-gray-200"
     >
       {copied ? (
         <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -109,7 +109,7 @@ function CopyButton({ text }) {
 function MarkdownContent({ content }) {
   const blocks = parseBlocks(content);
   return (
-    <div className="text-sm text-gray-800 space-y-1.5 leading-relaxed">
+    <div className="text-sm text-gray-800 space-y-1.5 leading-relaxed break-words overflow-hidden">
       {blocks.map((block, i) => <Block key={i} block={block} />)}
     </div>
   );

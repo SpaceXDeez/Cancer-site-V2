@@ -129,7 +129,10 @@ export default function TutorialOverlay({ onDone, onSettingsNav, onOpenSidebar }
       };
     } else if (pos === 'top') {
       const cardLeft = Math.max(12, Math.min(win.w - CALLOUT_W - 12, left + width / 2 - CALLOUT_W / 2));
-      callout = { bottom: win.h - top + PAD + ARROW_GAP, left: cardLeft };
+      const rawBottom = win.h - top + PAD + ARROW_GAP;
+      // Clamp so card top edge stays >= 12px from viewport top (estimate 220px card height)
+      const clampedBottom = Math.min(win.h - 232, rawBottom);
+      callout = { bottom: Math.max(12, clampedBottom), left: cardLeft };
     } else {
       const cardLeft = Math.max(12, Math.min(win.w - CALLOUT_W - 12, left + width / 2 - CALLOUT_W / 2));
       callout = { top: top + height + PAD + ARROW_GAP, left: cardLeft };

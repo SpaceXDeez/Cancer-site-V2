@@ -85,7 +85,7 @@ export default function HomePage({ isLoggedIn, user, onLoginClick, onStartChat }
             <span className="text-blue-300 text-xs font-medium tracking-wide uppercase">In partnership with XIT Foundation</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-white leading-snug mb-4">
-            AI support for Ewing's sarcoma<br />
+            AI support for Ewing's sarcoma{' '}
             <span className="text-blue-400">patients and families.</span>
           </h1>
           <p className="text-slate-300 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto mb-8">

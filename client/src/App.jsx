@@ -257,7 +257,7 @@ export default function App() {
       )}
 
       {/* Return-user reminder banner — shown once per session */}
-      {showReturnBanner && (        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-white border border-blue-200 rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 max-w-sm w-[calc(100vw-2rem)]">
+      {showReturnBanner && (        <div className="fixed left-1/2 -translate-x-1/2 z-50 bg-white border border-blue-200 rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 max-w-sm w-[calc(100vw-2rem)]" style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
           <svg className="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

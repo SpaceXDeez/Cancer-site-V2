@@ -83,15 +83,17 @@ function MessageActions({ content, onRetry }) {
 
   async function handleShare() {
     const copyFallback = () =>
-      navigator.clipboard.writeText(content).then(() => { setShared(true); setTimeout(() => setShared(false), 2000); });
+      navigator.clipboard.writeText(content)
+        .then(() => { setShared(true); setTimeout(() => setShared(false), 2000); })
+        .catch(() => {});
 
     if (navigator.share) {
       try {
         await navigator.share({ text: content });
         setShared(true);
         setTimeout(() => setShared(false), 2000);
-      } catch (e) {
-        if (e?.name !== 'AbortError') copyFallback(); // user didn't cancel — fall back to clipboard
+      } catch {
+        copyFallback(); // share failed or was cancelled — always fall back to clipboard
       }
     } else {
       copyFallback();

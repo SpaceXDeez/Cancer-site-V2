@@ -277,7 +277,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
       )}
 
       {/* Input */}
-      <div className="flex-shrink-0 border-t border-gray-100 px-4 pt-4 bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.06)]" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
+      <div className={`flex-shrink-0 px-4 pt-4 bg-white${isNew ? '' : ' border-t border-gray-100 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]'}`} style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
         <div className="max-w-3xl mx-auto">
 
           {/* Attachment chip */}

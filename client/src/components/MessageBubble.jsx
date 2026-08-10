@@ -115,11 +115,9 @@ function MessageActions({ content, onRetry }) {
 
       {/* Share button with inline status label */}
       <div className="flex items-center gap-1">
-        <Btn onClick={handleShare} title="Share — copy link" active={shared} disabled={sharing}>
+        <Btn onClick={handleShare} title="Share — copy link" active={shared} disabled={sharing} loading={sharing}>
           {sharing ? (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16 8 8 0 01-8-8z"
-              className="animate-spin origin-center" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3a9 9 0 109 9" />
           ) : shared ? (
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
           ) : (
@@ -142,12 +140,12 @@ function MessageActions({ content, onRetry }) {
   );
 }
 
-function Btn({ onClick, title, active, activeColor = 'text-blue-600', disabled, children }) {
+function Btn({ onClick, title, active, activeColor = 'text-blue-600', disabled, loading, children }) {
   return (
     <button onClick={onClick} title={title} disabled={disabled}
       className={`p-2 rounded-lg transition-colors hover:bg-gray-100 disabled:cursor-wait ${active ? activeColor : 'text-gray-400 hover:text-gray-700'}`}
     >
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">{children}</svg>
+      <svg className={`w-4 h-4${loading ? ' animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">{children}</svg>
     </button>
   );
 }

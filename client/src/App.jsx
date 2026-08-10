@@ -48,7 +48,9 @@ export default function App() {
       setProfile(loadedProfile);
       const loadedChats = chatsData.chats || [];
       setChats(loadedChats);
-      if (Object.keys(loadedProfile).length === 0) {
+      const profileKey = `profileDone_${user?.id}`;
+      const isNew = Object.keys(loadedProfile).length === 0 && !localStorage.getItem(profileKey);
+      if (isNew) {
         setIsFirstVisit(true);
         setShowQ(true);
       } else if (!sessionStorage.getItem('returnBannerShown')) {
@@ -105,6 +107,7 @@ export default function App() {
       const wasFirst = isFirstVisit;
       setIsFirstVisit(false);
       if (chats.length === 0) handleNewChat();
+      localStorage.setItem(`profileDone_${user?.id}`, '1');
       // Only show tutorial if they haven't completed it before
       if (wasFirst && !localStorage.getItem('tutorialDone')) {
         setTimeout(() => setShowTutorial(true), 900);

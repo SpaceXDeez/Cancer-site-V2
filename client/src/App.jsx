@@ -53,6 +53,7 @@ export default function App() {
       if (isNew) {
         setIsFirstVisit(true);
         setShowQ(true);
+        localStorage.setItem('tutorialPending', '1'); // cleared in handleSaveProfile
       } else if (!sessionStorage.getItem('returnBannerShown')) {
         // Returning user with existing profile — remind once per session
         setShowReturnBanner(true);
@@ -107,7 +108,9 @@ export default function App() {
       setIsFirstVisit(false);
       if (chats.length === 0) handleNewChat();
       localStorage.setItem(`profileDone_${user?.id}`, '1');
-      if (!localStorage.getItem('tutorialDone')) {
+      if (localStorage.getItem('tutorialPending') === '1') {
+        localStorage.removeItem('tutorialPending');
+        localStorage.removeItem('tutorialDone'); // clear stale flag from old accounts
         setTimeout(() => setShowTutorial(true), 900);
       }
     } catch (err) { console.error(err); }

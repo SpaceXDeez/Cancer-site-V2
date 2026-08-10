@@ -18,7 +18,7 @@ function parseAttachment(content) {
   return { filename: match[1], userText: match[2] || '' };
 }
 
-export default function MessageBubble({ message }) {
+export default function MessageBubble({ message, onRetry, isLast }) {
   const isUser = message.role === 'user';
   const ts  = message.created_at || message.timestamp;
   const time = ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
@@ -50,9 +50,9 @@ export default function MessageBubble({ message }) {
       <div className="flex-1 min-w-0">
         <div className="relative bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3">
           <MarkdownContent content={message.content} />
-          <CopyButton text={message.content} />
         </div>
         <p className="text-xs text-gray-400 mt-1 pl-1">{time}</p>
+        <MessageActions content={message.content} onRetry={isLast ? onRetry : null} />
       </div>
     </div>
   );
@@ -71,33 +71,55 @@ function AttachmentCard({ filename }) {
   );
 }
 
-// ── Copy button ────────────────────────────────────────────────────────────────
-function CopyButton({ text }) {
+// ── Message action bar ────────────────────────────────────────────────────────
+function MessageActions({ content, onRetry }) {
   const [copied, setCopied] = useState(false);
+  const [rating, setRating] = useState(null);
+  const [shared, setShared] = useState(false);
 
   function handleCopy() {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+    navigator.clipboard.writeText(content).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
+  }
+
+  async function handleShare() {
+    if (navigator.share) {
+      try { await navigator.share({ text: content }); } catch { /* user cancelled */ }
+    } else {
+      navigator.clipboard.writeText(content).then(() => { setShared(true); setTimeout(() => setShared(false), 2000); });
+    }
   }
 
   return (
-    <button
-      onClick={handleCopy}
-      title={copied ? 'Copied!' : 'Copy response'}
-      className="absolute top-2 right-2 opacity-40 sm:opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg bg-white/80 hover:bg-white text-gray-500 hover:text-gray-800 shadow-sm border border-gray-200"
-    >
-      {copied ? (
-        <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-        </svg>
-      ) : (
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-        </svg>
+    <div className="flex items-center gap-0.5 mt-1.5 pl-1 opacity-100 sm:opacity-40 sm:group-hover:opacity-100 transition-opacity">
+      <Btn onClick={handleCopy} title={copied ? 'Copied!' : 'Copy'} active={copied}>
+        {copied
+          ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />}
+      </Btn>
+      <Btn onClick={() => setRating(r => r === 'up' ? null : 'up')} title="Good response" active={rating === 'up'} activeColor="text-green-600">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+      </Btn>
+      <Btn onClick={() => setRating(r => r === 'down' ? null : 'down')} title="Bad response" active={rating === 'down'} activeColor="text-red-500">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+      </Btn>
+      <Btn onClick={handleShare} title={shared ? 'Copied to clipboard!' : 'Share response'} active={shared}>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+      </Btn>
+      {onRetry && (
+        <Btn onClick={onRetry} title="Try again">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </Btn>
       )}
+    </div>
+  );
+}
+
+function Btn({ onClick, title, active, activeColor = 'text-blue-600', children }) {
+  return (
+    <button onClick={onClick} title={title}
+      className={`p-2 rounded-lg transition-colors hover:bg-gray-100 ${active ? activeColor : 'text-gray-400 hover:text-gray-700'}`}
+    >
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">{children}</svg>
     </button>
   );
 }

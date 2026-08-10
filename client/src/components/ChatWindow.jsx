@@ -75,6 +75,11 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
     }
   }
 
+  function handleRetry() {
+    const lastUserMsg = [...(messages || [])].reverse().find(m => m.role === 'user');
+    if (lastUserMsg) send(lastUserMsg.content);
+  }
+
   async function send(text) {
     const trimmed = text.trim();
     if ((!trimmed && !attachment) || loading || messages === null) return;
@@ -226,7 +231,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
               return (
                 <React.Fragment key={msg.id}>
                   {isLastAi && <div ref={aiResponseRef} />}
-                  <MessageBubble message={msg} />
+                  <MessageBubble message={msg} isLast={isLastAi} onRetry={isLastAi ? handleRetry : undefined} />
                 </React.Fragment>
               );
             })}

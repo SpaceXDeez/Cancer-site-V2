@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 function getInitials(name, email) {
   const src = name?.trim() || email || '';
@@ -77,6 +77,11 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
   // Allow the tutorial to drive which tab is shown
   useEffect(() => { if (forcedTab) setTab(forcedTab); }, [forcedTab]);
 
+  // Scroll active mobile tab into view when tab changes
+  const mobileTabRef = useCallback(node => {
+    node?.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
+  }, [tab]);
+
   const [displayName, setDisplayName]   = useState(settings.displayName || '');
   const [aiStyle, setAiStyle]           = useState(settings.aiStyle || 'balanced');
   const [customInstructions, setCustom] = useState(settings.customInstructions || '');
@@ -147,7 +152,7 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 sm:p-4">
-      <div className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden rounded-t-2xl">
+      <div className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl h-[92dvh] sm:max-h-[90vh] flex flex-col overflow-hidden rounded-t-2xl">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 flex-shrink-0">
@@ -168,6 +173,7 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
             {TABS.map(t => (
               <button
                 key={t.id}
+                ref={tab === t.id ? mobileTabRef : null}
                 data-tutorial={`settings-tab-${t.id}`}
                 onClick={() => setTab(t.id)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors flex-shrink-0 ${

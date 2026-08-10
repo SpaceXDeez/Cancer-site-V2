@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 
 // ── Data ───────────────────────────────────────────────────────────────────────
 const TUMOR_SITES = [
@@ -91,7 +91,7 @@ function TextArea({ value, onChange, placeholder, rows = 3 }) {
 
 function Radios({ options, value, onChange }) {
   return (
-    <div className="flex flex-wrap gap-x-5 gap-y-2">
+    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-y-2 sm:gap-x-5">
       {options.map(o => {
         const v = typeof o === 'string' ? o : o.value;
         const l = typeof o === 'string' ? o : o.label;
@@ -132,7 +132,7 @@ function Checkboxes({ options, selected = [], onToggle }) {
 
 function SubSection({ children }) {
   return (
-    <div className="ml-4 pl-4 border-l-2 border-blue-100 mb-5 space-y-4">
+    <div className="ml-2 pl-2 sm:ml-4 sm:pl-4 border-l-2 border-blue-100 mb-5 space-y-4">
       {children}
     </div>
   );
@@ -645,9 +645,22 @@ export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }
   const effectiveActive = isFirstVisit ? SECTIONS[wizardStep].id : active;
   const ActivePanel = panels[effectiveActive];
 
+  // Auto-scroll active mobile section tab into view when section changes
+  const mobileTabRef = useCallback(node => {
+    node?.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
+  }, [effectiveActive]);
+
+  // Reset form scroll position when section changes
+  const mobileFormRef = useRef(null);
+  const desktopFormRef = useRef(null);
+  useEffect(() => {
+    mobileFormRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+    desktopFormRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+  }, [effectiveActive]);
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="bg-white sm:rounded-2xl w-full sm:max-w-4xl h-[95vh] sm:max-h-[92vh] flex flex-col shadow-2xl rounded-t-2xl">
+      <div className="bg-white sm:rounded-2xl w-full sm:max-w-4xl h-[95dvh] sm:max-h-[92vh] flex flex-col shadow-2xl rounded-t-2xl">
 
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 flex items-start justify-between flex-shrink-0">
@@ -722,6 +735,7 @@ export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }
                   return (
                     <button
                       key={s.id}
+                      ref={effectiveActive === s.id ? mobileTabRef : null}
                       onClick={() => isFirstVisit ? setWizardStep(i) : setActive(s.id)}
                       className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs whitespace-nowrap transition-colors flex-shrink-0 ${
                         effectiveActive === s.id
@@ -737,14 +751,14 @@ export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }
                 })}
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-4" ref={mobileFormRef}>
               <ActivePanel form={form} upd={upd} tog={tog} />
             </div>
           </div>
 
           {/* Desktop: form body */}
           <div className="hidden sm:flex flex-col flex-1 overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6" ref={desktopFormRef}>
               <ActivePanel form={form} upd={upd} tog={tog} />
             </div>
           </div>

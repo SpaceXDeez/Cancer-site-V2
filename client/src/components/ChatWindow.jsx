@@ -148,7 +148,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
   }
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className={`flex flex-col h-full bg-white${isNew ? ' justify-center overflow-y-auto' : ''}`}>
       {/* Top bar */}
       <div className="flex items-center justify-between pr-5 pl-14 md:pl-5 py-3 border-b border-gray-200 flex-shrink-0 gap-3">
         <div className="min-w-0">
@@ -196,14 +196,14 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
       </div>
 
       {/* Messages / new-chat hero */}
-      <div className="flex-1 overflow-y-auto px-4 py-5">
+      <div className={isNew ? 'px-4 pt-10 pb-4' : 'flex-1 overflow-y-auto px-4 py-5'}>
         {messages === null ? (
           <div className="flex justify-center pt-12">
             <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : isNew ? (
           /* Centered hero — shown before any message is sent */
-          <div className="h-full flex flex-col items-center justify-center gap-3 text-center px-4 py-12">
+          <div className="flex flex-col items-center gap-3 text-center">
             <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
               <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}

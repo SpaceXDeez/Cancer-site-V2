@@ -44,6 +44,11 @@ const SQLITE_SCHEMA = `
     text       TEXT    NOT NULL,
     created_at TEXT    DEFAULT (datetime('now'))
   );
+  CREATE TABLE IF NOT EXISTS shared_messages (
+    token      TEXT PRIMARY KEY,
+    content    TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
 `;
 
 const PG_SCHEMA = `
@@ -79,6 +84,11 @@ const PG_SCHEMA = `
     text       TEXT    NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
   );
+  CREATE TABLE IF NOT EXISTS shared_messages (
+    token      TEXT PRIMARY KEY,
+    content    TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+  );
 `;
 
 // ── Initialize (call once at server startup) ──────────────────────────────────
@@ -88,11 +98,22 @@ async function initDb() {
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false },
+      connectionTimeoutMillis: 10000,
+    });
+    // Test connection before proceeding so startup errors are logged clearly
+    await pool.query('SELECT 1').catch(err => {
+      console.error('PostgreSQL connection failed. DATABASE_URL =', process.env.DATABASE_URL?.replace(/:\/\/[^@]+@/, '://***@'));
+      throw err;
     });
     await pool.query(PG_SCHEMA);
     // Add column for existing DBs that predate this field
     await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT FALSE').catch(() => {});
-    // Migration for documents table added after initial deploy
+    // Migrations for tables added after initial deploy
+    await pool.query(`CREATE TABLE IF NOT EXISTS shared_messages (
+      token      TEXT PRIMARY KEY,
+      content    TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`).catch(() => {});
     await pool.query(`CREATE TABLE IF NOT EXISTS documents (
       id         BIGSERIAL PRIMARY KEY,
       user_id    BIGINT  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -248,6 +269,18 @@ const db = {
     const q = 'SELECT id, filename, text, created_at FROM documents WHERE user_id = ? ORDER BY created_at DESC LIMIT 10';
     const rows = IS_PG ? await pgAll(q, [userId]) : await sqAll(q, [userId]);
     return rows.map(r => ({ ...r, filename: decrypt(r.filename), text: decrypt(r.text) }));
+  },
+
+  // Shared message links
+  async createShare(token, content) {
+    const q = 'INSERT INTO shared_messages (token, content) VALUES (?, ?)';
+    if (IS_PG) return pgRun(q, [token, content]);
+    return sqRun(q, [token, content]);
+  },
+  async getShare(token) {
+    const q = 'SELECT content, created_at FROM shared_messages WHERE token = ?';
+    if (IS_PG) return pgGet(q, [token]);
+    return sqGet(q, [token]);
   },
 };
 

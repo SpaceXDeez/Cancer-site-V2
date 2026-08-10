@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 export default function ChatSidebar({
   chats, currentChatId, profile, user, view, sidebarOpen,
-  onNewChat, onSelectChat, onDeleteChat, onRenameChat, onOpenProfile, onLogout, onSetView, onCloseSidebar,
+  onNewChat, onSelectChat, onDeleteChat, onRenameChat, onOpenProfile, onOpenMedicalProfile, onLogout, onSetView, onCloseSidebar,
 }) {
   const [renamingId, setRenamingId]   = useState(null);
   const [renameVal, setRenameVal]     = useState('');
@@ -167,8 +167,33 @@ export default function ChatSidebar({
         )}
       </div>
 
-      {/* Profile button — opens unified settings panel */}
+      {/* Bottom buttons */}
       <div className="px-3 py-3 border-t border-slate-700/60 space-y-1">
+
+        {/* Medical Profile — standalone entry point */}
+        <button
+          data-tutorial="medical-profile-btn"
+          onClick={onOpenMedicalProfile}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition-colors group"
+        >
+          <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0 group-hover:bg-slate-600 transition-colors">
+            <svg className="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <div className="text-left flex-1 min-w-0">
+            <p className="text-sm font-medium truncate leading-tight">Medical Profile</p>
+            <p className="text-xs text-slate-500 leading-tight">
+              {filledCount > 0 ? `${filledCount} field${filledCount !== 1 ? 's' : ''} filled` : 'Not set up yet'}
+            </p>
+          </div>
+          <svg className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+
+        {/* Settings button */}
         <button
           data-tutorial="profile-btn"
           onClick={onOpenProfile}
@@ -181,9 +206,7 @@ export default function ChatSidebar({
           </div>
           <div className="text-left flex-1 min-w-0">
             <p className="text-sm font-medium truncate leading-tight">{profileName}</p>
-            <p className="text-xs text-slate-500 leading-tight">
-              {filledCount > 0 ? `${filledCount} profile field${filledCount !== 1 ? 's' : ''} saved` : 'Settings & profile'}
-            </p>
+            <p className="text-xs text-slate-500 leading-tight">Personalization &amp; account</p>
           </div>
           <svg className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

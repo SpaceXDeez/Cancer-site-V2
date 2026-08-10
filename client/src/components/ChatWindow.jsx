@@ -75,6 +75,11 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
     }
   }
 
+  function handleRetry() {
+    const lastUserMsg = [...(messages || [])].reverse().find(m => m.role === 'user');
+    if (lastUserMsg) send(lastUserMsg.content);
+  }
+
   async function send(text) {
     const trimmed = text.trim();
     if ((!trimmed && !attachment) || loading || messages === null) return;
@@ -195,15 +200,17 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
         </div>
       </div>
 
+      {/* Below-header content: centered cluster for new chat, normal scroll for existing */}
+      <div className={isNew ? 'flex-1 flex flex-col justify-center overflow-y-auto' : 'flex-1 flex flex-col overflow-hidden'}>
       {/* Messages / new-chat hero */}
-      <div className="flex-1 overflow-y-auto px-4 py-5">
+      <div className={isNew ? 'px-4 pt-6 pb-4' : 'flex-1 overflow-y-auto px-4 py-5'}>
         {messages === null ? (
           <div className="flex justify-center pt-12">
             <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : isNew ? (
           /* Centered hero — shown before any message is sent */
-          <div className="h-full flex flex-col items-center justify-center gap-3 text-center px-4 py-12">
+          <div className="flex flex-col items-center gap-3 text-center">
             <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
               <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
@@ -224,7 +231,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
               return (
                 <React.Fragment key={msg.id}>
                   {isLastAi && <div ref={aiResponseRef} />}
-                  <MessageBubble message={msg} />
+                  <MessageBubble message={msg} isLast={isLastAi} onRetry={isLastAi ? handleRetry : undefined} />
                 </React.Fragment>
               );
             })}
@@ -275,7 +282,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
       )}
 
       {/* Input */}
-      <div className="flex-shrink-0 border-t border-gray-100 px-4 pt-4 bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.06)]" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
+      <div className={`flex-shrink-0 px-4 pt-4 bg-white${isNew ? '' : ' border-t border-gray-100 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]'}`} style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
         <div className="max-w-3xl mx-auto">
 
           {/* Attachment chip */}
@@ -358,7 +365,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
 
       {/* Suggested questions — shown below input only on new empty chats */}
       {isNew && !loading && (
-        <div className="flex-shrink-0 px-4 pb-4 bg-white">
+        <div className="flex-shrink-0 px-4 pb-4">
           <div className="max-w-3xl mx-auto">
             <p className="text-xs text-gray-400 mb-2 text-center">Suggested questions to get started</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -375,6 +382,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

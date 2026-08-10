@@ -416,6 +416,25 @@ app.post('/api/upload', requireAuth, dailyUploadLimiter, uploadLimiter, (req, re
   }
 });
 
+// ── Health check (no auth, no CORS) ──────────────────────────────────────────
+app.get('/health', (_req, res) => res.json({ status: 'ok', env: process.env.NODE_ENV }));
+
+// ── Shareable message links ───────────────────────────────────────────────────
+app.post('/api/share', corsMiddleware, requireAuth, async (req, res) => {
+  const { content } = req.body;
+  if (!content || typeof content !== 'string' || content.trim().length === 0)
+    return res.status(400).json({ error: 'content is required' });
+  const token = require('crypto').randomUUID();
+  await db.createShare(token, content.trim());
+  res.json({ token });
+});
+
+app.get('/api/shared/:token', corsMiddleware, async (req, res) => {
+  const row = await db.getShare(req.params.token);
+  if (!row) return res.status(404).json({ error: 'Shared message not found' });
+  res.json(row);
+});
+
 // ── Serve React app in production ─────────────────────────────────────────────
 if (isProd) {
   const distPath = path.join(__dirname, '../client/dist');

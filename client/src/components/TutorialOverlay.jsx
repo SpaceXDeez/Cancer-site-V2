@@ -12,31 +12,10 @@ const STEPS = [
     position: 'right',
   },
   {
-    target: 'settings-tab-profile',
-    settingsTab: 'profile',
-    title: 'Profile — your medical background',
-    body: 'The AI reads this on every message. Fill it in so responses are specific to the patient\'s diagnosis, treatment, and symptoms.',
-    position: 'right',
-  },
-  {
-    target: 'settings-tab-personalization',
-    settingsTab: 'personalization',
-    title: 'Personalization — set the tone',
-    body: 'Choose Supportive & Simple, Balanced, or Clinical & Detailed. Add custom instructions the AI always follows.',
-    position: 'right',
-  },
-  {
-    target: 'settings-tab-account',
-    settingsTab: 'account',
-    title: 'Account',
-    body: 'View your email address and change your password any time.',
-    position: 'right',
-  },
-  {
-    target: 'settings-tab-data',
-    settingsTab: 'data',
-    title: 'Data controls',
-    body: 'Download everything as JSON, wipe all chat history, or permanently delete your account.',
+    target: 'medical-profile-btn',
+    requiresSidebar: true,
+    title: 'Fill in your medical profile',
+    body: 'The AI reads this on every message. Add diagnosis, treatment, and symptoms so every answer is specific to your situation.',
     position: 'right',
   },
   {
@@ -118,14 +97,18 @@ export default function TutorialOverlay({ onDone, onSettingsNav, onOpenSidebar }
     callout = { top: '50%', left: '50%', transform: 'translate(-50%,-50%)' };
   } else {
     const { top, left, width, height } = targetRect;
-    const pos = current.position || 'bottom';
+    // Auto-fallback: 'right' with no room (e.g. full-width sidebar on mobile) → top/bottom
+    let pos = current.position || 'bottom';
+    if (pos === 'right' && left + width + CALLOUT_W + PAD * 2 > win.w) {
+      pos = (top + height / 2) < win.h / 2 ? 'bottom' : 'top';
+    }
     const ARROW_GAP = 14;
     if (pos === 'right') {
       const idealTop = top + height / 2 - 110;
       const idealLeft = left + width + PAD + ARROW_GAP;
       callout = {
         top: Math.max(12, Math.min(win.h - 240, idealTop)),
-        left: Math.min(win.w - CALLOUT_W - 12, idealLeft), // clamp so card doesn't bleed off right edge
+        left: Math.min(win.w - CALLOUT_W - 12, idealLeft),
       };
     } else if (pos === 'top') {
       const cardLeft = Math.max(12, Math.min(win.w - CALLOUT_W - 12, left + width / 2 - CALLOUT_W / 2));

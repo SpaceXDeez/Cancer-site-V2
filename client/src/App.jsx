@@ -8,6 +8,10 @@ import LoginModal     from './components/LoginModal.jsx';
 import SettingsModal  from './components/SettingsModal.jsx';
 import TutorialOverlay from './components/TutorialOverlay.jsx';
 import ErrorBoundary   from './components/ErrorBoundary.jsx';
+import SharedMessageView from './components/SharedMessageView.jsx';
+
+// Render shared view for /shared/:token without requiring auth
+const sharedToken = window.location.pathname.match(/^\/shared\/([\w-]+)/)?.[1] ?? null;
 
 export default function App() {
   const { token, user, authFetch, logout } = useAuth();
@@ -44,7 +48,9 @@ export default function App() {
       setProfile(loadedProfile);
       const loadedChats = chatsData.chats || [];
       setChats(loadedChats);
-      if (Object.keys(loadedProfile).length === 0) {
+      const profileKey = `profileDone_${user?.id}`;
+      const isNew = Object.keys(loadedProfile).length === 0 && !localStorage.getItem(profileKey);
+      if (isNew) {
         setIsFirstVisit(true);
         setShowQ(true);
       } else if (!sessionStorage.getItem('returnBannerShown')) {
@@ -101,9 +107,9 @@ export default function App() {
       const wasFirst = isFirstVisit;
       setIsFirstVisit(false);
       if (chats.length === 0) handleNewChat();
-      // Always show tutorial for first-time users regardless of any stale localStorage flag
-      if (wasFirst) {
-        localStorage.removeItem('tutorialDone');
+      localStorage.setItem(`profileDone_${user?.id}`, '1');
+      // Only show tutorial if they haven't completed it before
+      if (wasFirst && !localStorage.getItem('tutorialDone')) {
         setTimeout(() => setShowTutorial(true), 900);
       }
     } catch (err) { console.error(err); }
@@ -152,6 +158,8 @@ export default function App() {
   }, []);
 
   // Logged-out: show home page with login modal
+  if (sharedToken) return <SharedMessageView token={sharedToken} />;
+
   if (!token) {
     return (
       <div className="flex h-screen overflow-hidden">
@@ -215,6 +223,7 @@ export default function App() {
           if (showQ && isFirstVisit) return;
           setShowSettings(true); closeSidebar();
         }}
+        onOpenMedicalProfile={() => { setShowQ(true); closeSidebar(); }}
         onLogout={logout}
         onSetView={(v) => { setView(v); closeSidebar(); }}
         onCloseSidebar={closeSidebar}

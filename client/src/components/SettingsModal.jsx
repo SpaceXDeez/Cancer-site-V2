@@ -237,22 +237,6 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
                   <p className="text-xs text-gray-400 mt-1">Shown in the sidebar. Not used medically.</p>
                 </div>
 
-                <div className="flex items-center justify-between py-3 border-t border-gray-100">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Medical profile</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Diagnosis, treatment, medications, and more.</p>
-                  </div>
-                  <button
-                    onClick={() => { onSave({ displayName, aiStyle, customInstructions }); onOpenQuestionnaire(); }}
-                    className="flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    Edit
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-
                 <div className="flex items-center gap-3 pt-1">
                   <button
                     onClick={savePersonalization}

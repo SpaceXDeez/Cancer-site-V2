@@ -12,24 +12,10 @@ const STEPS = [
     position: 'right',
   },
   {
-    target: 'settings-tab-personalization',
-    settingsTab: 'personalization',
-    title: 'Personalization — set the tone',
-    body: 'Choose Supportive & Simple, Balanced, or Clinical & Detailed. Add custom instructions the AI always follows.',
-    position: 'right',
-  },
-  {
-    target: 'settings-tab-account',
-    settingsTab: 'account',
-    title: 'Account',
-    body: 'View your email address and change your password any time.',
-    position: 'right',
-  },
-  {
-    target: 'settings-tab-data',
-    settingsTab: 'data',
-    title: 'Data controls',
-    body: 'Download everything as JSON, wipe all chat history, or permanently delete your account.',
+    target: 'medical-profile-btn',
+    requiresSidebar: true,
+    title: 'Fill in your medical profile',
+    body: 'The AI reads this on every message. Add diagnosis, treatment, and symptoms so every answer is specific to your situation.',
     position: 'right',
   },
   {

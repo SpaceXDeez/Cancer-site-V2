@@ -148,7 +148,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
   }
 
   return (
-    <div className={`flex flex-col h-full bg-white${isNew ? ' justify-center overflow-y-auto' : ''}`}>
+    <div className="flex flex-col h-full bg-white">
       {/* Top bar */}
       <div className="flex items-center justify-between pr-5 pl-14 md:pl-5 py-3 border-b border-gray-200 flex-shrink-0 gap-3">
         <div className="min-w-0">
@@ -195,8 +195,10 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
         </div>
       </div>
 
+      {/* Below-header content: centered cluster for new chat, normal scroll for existing */}
+      <div className={isNew ? 'flex-1 flex flex-col justify-center overflow-y-auto' : 'flex-1 flex flex-col overflow-hidden'}>
       {/* Messages / new-chat hero */}
-      <div className={isNew ? 'px-4 pt-10 pb-4' : 'flex-1 overflow-y-auto px-4 py-5'}>
+      <div className={isNew ? 'px-4 pt-6 pb-4' : 'flex-1 overflow-y-auto px-4 py-5'}>
         {messages === null ? (
           <div className="flex justify-center pt-12">
             <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
@@ -358,7 +360,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
 
       {/* Suggested questions — shown below input only on new empty chats */}
       {isNew && !loading && (
-        <div className="flex-shrink-0 px-4 pb-4 bg-white">
+        <div className="flex-shrink-0 px-4 pb-4">
           <div className="max-w-3xl mx-auto">
             <p className="text-xs text-gray-400 mb-2 text-center">Suggested questions to get started</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -375,6 +377,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

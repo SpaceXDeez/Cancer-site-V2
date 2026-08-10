@@ -12,13 +12,6 @@ const STEPS = [
     position: 'right',
   },
   {
-    target: 'medical-profile-btn',
-    requiresSidebar: true,
-    title: 'Fill in your medical profile',
-    body: 'The AI reads this on every message. Add diagnosis, treatment, and symptoms so every answer is specific to your situation.',
-    position: 'right',
-  },
-  {
     target: 'settings-tab-personalization',
     settingsTab: 'personalization',
     title: 'Personalization — set the tone',

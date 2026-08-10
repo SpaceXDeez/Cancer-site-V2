@@ -8,6 +8,10 @@ import LoginModal     from './components/LoginModal.jsx';
 import SettingsModal  from './components/SettingsModal.jsx';
 import TutorialOverlay from './components/TutorialOverlay.jsx';
 import ErrorBoundary   from './components/ErrorBoundary.jsx';
+import SharedMessageView from './components/SharedMessageView.jsx';
+
+// Render shared view for /shared/:token without requiring auth
+const sharedToken = window.location.pathname.match(/^\/shared\/([\w-]+)/)?.[1] ?? null;
 
 export default function App() {
   const { token, user, authFetch, logout } = useAuth();
@@ -152,6 +156,8 @@ export default function App() {
   }, []);
 
   // Logged-out: show home page with login modal
+  if (sharedToken) return <SharedMessageView token={sharedToken} />;
+
   if (!token) {
     return (
       <div className="flex h-screen overflow-hidden">

@@ -111,8 +111,8 @@ export default function App() {
       localStorage.setItem(`profileDone_${user?.id}`, '1');
       if (localStorage.getItem('tutorialPending') === '1') {
         localStorage.removeItem('tutorialPending');
-        localStorage.removeItem('tutorialDone'); // clear stale flag from old accounts
-        setTimeout(() => setShowTutorial(true), 900);
+        localStorage.removeItem('tutorialDone');
+        setShowTutorial(true);
       }
     } catch (err) { console.error(err); }
   }, [authFetch, chats.length, handleNewChat]);

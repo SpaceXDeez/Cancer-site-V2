@@ -8,7 +8,8 @@ export default function AuthForm({ onSuccess, compact = false }) {
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   // Only expose test-account option when URL contains ?dev
-  const showDevOption = new URLSearchParams(window.location.search).has('dev');
+  const showDevOption = new URLSearchParams(window.location.search).has('dev')
+    || window.location.hostname.includes('staging');
   const [isTest, setIsTest]     = useState(false);
   const [error, setError]       = useState(null);
   const [loading, setLoading]   = useState(false);

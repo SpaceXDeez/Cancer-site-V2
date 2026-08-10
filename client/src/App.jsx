@@ -105,6 +105,7 @@ export default function App() {
       if (!res.ok) throw new Error(`Failed to save profile (${res.status})`);
       setProfile(newProfile);
       setShowQ(false);
+      setShowSettings(false);
       setIsFirstVisit(false);
       if (chats.length === 0) handleNewChat();
       localStorage.setItem(`profileDone_${user?.id}`, '1');

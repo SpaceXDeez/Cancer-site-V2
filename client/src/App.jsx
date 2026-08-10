@@ -104,16 +104,14 @@ export default function App() {
       if (!res.ok) throw new Error(`Failed to save profile (${res.status})`);
       setProfile(newProfile);
       setShowQ(false);
-      const wasFirst = isFirstVisit;
       setIsFirstVisit(false);
       if (chats.length === 0) handleNewChat();
       localStorage.setItem(`profileDone_${user?.id}`, '1');
-      // Only show tutorial if they haven't completed it before
-      if (wasFirst && !localStorage.getItem('tutorialDone')) {
+      if (!localStorage.getItem('tutorialDone')) {
         setTimeout(() => setShowTutorial(true), 900);
       }
     } catch (err) { console.error(err); }
-  }, [authFetch, chats.length, handleNewChat, isFirstVisit]);
+  }, [authFetch, chats.length, handleNewChat]);
 
   const handleUpdateProfile = useCallback(async (updates) => {
     const merged = { ...profile, ...updates };

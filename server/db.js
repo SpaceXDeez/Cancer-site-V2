@@ -49,6 +49,12 @@ const SQLITE_SCHEMA = `
     content    TEXT NOT NULL,
     created_at TEXT DEFAULT (datetime('now'))
   );
+  CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    token      TEXT PRIMARY KEY,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at INTEGER NOT NULL,
+    used       INTEGER DEFAULT 0
+  );
 `;
 
 const PG_SCHEMA = `
@@ -89,6 +95,12 @@ const PG_SCHEMA = `
     content    TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
   );
+  CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    token      TEXT PRIMARY KEY,
+    user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at BIGINT NOT NULL,
+    used       BOOLEAN DEFAULT FALSE
+  );
 `;
 
 // ── Initialize (call once at server startup) ──────────────────────────────────
@@ -120,6 +132,12 @@ async function initDb() {
       filename   TEXT    NOT NULL,
       text       TEXT    NOT NULL,
       created_at TIMESTAMPTZ DEFAULT NOW()
+    )`).catch(() => {});
+    await pool.query(`CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      token      TEXT PRIMARY KEY,
+      user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      expires_at BIGINT NOT NULL,
+      used       BOOLEAN DEFAULT FALSE
     )`).catch(() => {});
     console.log('Connected to PostgreSQL');
   } else {
@@ -196,6 +214,23 @@ const db = {
     const q = 'DELETE FROM users WHERE id = ?';
     if (IS_PG) return pgRun(q, [id]);
     return sqRun(q, [id]);
+  },
+
+  // Password reset tokens
+  async createPasswordReset(token, userId, expiresAt) {
+    const q = 'INSERT INTO password_reset_tokens (token, user_id, expires_at) VALUES (?, ?, ?)';
+    if (IS_PG) return pgRun(q, [token, userId, expiresAt]);
+    return sqRun(q, [token, userId, expiresAt]);
+  },
+  async getPasswordReset(token) {
+    const q = 'SELECT * FROM password_reset_tokens WHERE token = ?';
+    if (IS_PG) return pgGet(q, [token]);
+    return sqGet(q, [token]);
+  },
+  async markPasswordResetUsed(token) {
+    const q = 'UPDATE password_reset_tokens SET used = ? WHERE token = ?';
+    if (IS_PG) return pgRun(q, [true, token]);
+    return sqRun(q, [1, token]);
   },
 
   // Profiles

@@ -1,8 +1,10 @@
 const express     = require('express');
 const bcrypt      = require('bcryptjs');
 const jwt         = require('jsonwebtoken');
+const crypto      = require('crypto');
 const db          = require('../db');
 const requireAuth = require('../middleware/auth');
+const { sendPasswordResetEmail } = require('../utils/email');
 
 const router = express.Router();
 
@@ -81,6 +83,44 @@ router.delete('/account', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Delete account error:', err.message);
     res.status(500).json({ error: 'Failed to delete account. Please try again.' });
+  }
+});
+
+router.post('/forgot-password', async (req, res) => {
+  // Respond immediately — never reveal whether the email exists
+  res.json({ message: 'If an account with that email exists, a reset link has been sent.' });
+  const { email } = req.body;
+  if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return;
+  try {
+    const user = await db.getUserByEmail(email.toLowerCase().trim());
+    if (!user) return;
+    const token     = crypto.randomBytes(32).toString('hex');
+    const expiresAt = Date.now() + 60 * 60 * 1000; // 1 hour
+    await db.createPasswordReset(token, user.id, expiresAt);
+    const appUrl   = process.env.APP_URL || 'https://ewing-support-ai.up.railway.app';
+    const resetUrl = `${appUrl}/reset-password?token=${token}`;
+    await sendPasswordResetEmail(user.email, resetUrl);
+  } catch (err) {
+    console.error('Forgot password error:', err.message);
+  }
+});
+
+router.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+  if (typeof newPassword !== 'string' || newPassword.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+  }
+  try {
+    const record = await db.getPasswordReset(token);
+    const expired = !record || record.used || parseInt(record.expires_at, 10) < Date.now();
+    if (expired) return res.status(400).json({ error: 'This reset link is invalid or has expired.' });
+    const hash = await bcrypt.hash(newPassword, 12);
+    await db.updatePasswordHash(record.user_id, hash);
+    await db.markPasswordResetUsed(token);
+    res.json({ message: 'Password reset successfully. You can now sign in.' });
+  } catch (err) {
+    console.error('Reset password error:', err.message);
+    res.status(500).json({ error: 'Failed to reset password. Please try again.' });
   }
 });
 

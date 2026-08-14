@@ -9,9 +9,13 @@ import SettingsModal  from './components/SettingsModal.jsx';
 import TutorialOverlay from './components/TutorialOverlay.jsx';
 import ErrorBoundary   from './components/ErrorBoundary.jsx';
 import SharedMessageView from './components/SharedMessageView.jsx';
+import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 
-// Render shared view for /shared/:token without requiring auth
-const sharedToken = window.location.pathname.match(/^\/shared\/([\w-]+)/)?.[1] ?? null;
+// Early-exit routes that don't need auth
+const sharedToken = window.location.pathname.match(/^\/shared\/(\w[\w-]*)/)?.[1] ?? null;
+const resetToken  = window.location.pathname === '/reset-password'
+  ? new URLSearchParams(window.location.search).get('token')
+  : null;
 
 export default function App() {
   const { token, user, authFetch, logout } = useAuth();
@@ -161,6 +165,7 @@ export default function App() {
 
   // Logged-out: show home page with login modal
   if (sharedToken) return <SharedMessageView token={sharedToken} />;
+  if (resetToken)  return <ResetPasswordPage token={resetToken} />;
 
   if (!token) {
     return (

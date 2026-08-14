@@ -7,12 +7,85 @@ export default function AuthForm({ onSuccess, compact = false }) {
   const [mode, setMode]         = useState('login');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
   // Only expose test-account option when URL contains ?dev
   const showDevOption = new URLSearchParams(window.location.search).has('dev')
     || window.location.hostname.includes('staging');
   const [isTest, setIsTest]     = useState(false);
   const [error, setError]       = useState(null);
   const [loading, setLoading]   = useState(false);
+
+  async function handleForgot(e) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      setForgotSent(true);
+    } catch {
+      setError('Could not connect to the server.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── Forgot-password views ────────────────────────────────────────────────
+  if (mode === 'forgot') {
+    if (forgotSent) {
+      return (
+        <div className="text-center py-2">
+          <div className="text-4xl mb-4">📬</div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Check your email</h2>
+          <p className="text-sm text-gray-500 mb-6">
+            If an account with that address exists, we've sent a reset link.
+            Check your inbox (and spam folder).
+          </p>
+          <button
+            onClick={() => { setMode('login'); setForgotSent(false); setError(null); }}
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">
+            ← Back to sign in
+          </button>
+        </div>
+      );
+    }
+    return (
+      <div>
+        {!compact && (
+          <div className="mb-5">
+            <h2 className="text-lg font-semibold text-gray-900">Reset your password</h2>
+            <p className="text-sm text-gray-500 mt-1">Enter your email and we'll send you a reset link.</p>
+          </div>
+        )}
+        <form onSubmit={handleForgot} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email" value={email} onChange={e => setEmail(e.target.value)}
+              required autoComplete="email" placeholder="you@example.com"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            />
+          </div>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2.5 text-sm">{error}</div>
+          )}
+          <button type="submit" disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors shadow-sm">
+            {loading ? 'Sending…' : 'Send reset link'}
+          </button>
+        </form>
+        <p className="text-center text-sm text-gray-500 mt-5">
+          <button onClick={() => { setMode('login'); setError(null); }}
+            className="text-blue-600 hover:text-blue-800 font-medium transition-colors">
+            ← Back to sign in
+          </button>
+        </p>
+      </div>
+    );
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -96,6 +169,12 @@ export default function AuthForm({ onSuccess, compact = false }) {
             placeholder={mode === 'register' ? 'At least 8 characters' : '••••••••'}
             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
           />
+          {mode === 'login' && (
+            <button type="button" onClick={() => { setMode('forgot'); setError(null); }}
+              className="text-xs text-blue-500 hover:text-blue-700 mt-1 float-right transition-colors">
+              Forgot password?
+            </button>
+          )}
         </div>
 
         {mode === 'register' && showDevOption && (

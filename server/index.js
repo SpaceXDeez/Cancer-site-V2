@@ -226,7 +226,14 @@ function buildPatientContext(profile) {
     if (profile.medicationsStartDate) medLine += ` (from ${profile.medicationsStartDate}${profile.medicationsEndDate ? ` to ${profile.medicationsEndDate}` : ' — ongoing'})`;
     lines.push(medLine);
   }
-  add('Medication Allergies', profile.medicationAllergies);
+  if (Array.isArray(profile.medicationAllergies) && profile.medicationAllergies.length > 0) {
+    const allergyLines = profile.medicationAllergies
+      .map(a => a.medication ? `${a.medication}: ${a.reaction}` : a.reaction)
+      .filter(Boolean).join(', ');
+    if (allergyLines) add('Medication Allergies', allergyLines);
+  } else if (typeof profile.medicationAllergies === 'string') {
+    add('Medication Allergies', profile.medicationAllergies);
+  }
   add('Other Health Conditions', profile.comorbidities);
   add('Treating Institution', profile.treatingInstitution);
   add('Oncologist', profile.oncologistName);

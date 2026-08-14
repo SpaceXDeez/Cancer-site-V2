@@ -348,6 +348,55 @@ function MedicationTable({ items = [], onChange }) {
   );
 }
 
+// ── AllergyTable — medication + reaction pairs ────────────────────────────────
+function AllergyTable({ items = [], onChange }) {
+  const blank = () => ({ id: newId(), medication: '', reaction: '' });
+
+  function addRow() { onChange([...items, blank()]); }
+  function remove(id) { onChange(items.filter(i => i.id !== id)); }
+  function updRow(id, field, value) {
+    onChange(items.map(i => i.id === id ? { ...i, [field]: value } : i));
+  }
+
+  return (
+    <div className="mb-5">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-sm font-medium text-gray-700">Medication Allergies &amp; Intolerances</span>
+        <button onClick={addRow}
+          className="text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors">
+          + Add
+        </button>
+      </div>
+      {items.length === 0 ? (
+        <p className="text-xs text-gray-400 italic">None added — or enter NKDA if no known drug allergies.</p>
+      ) : (
+        <div className="space-y-2">
+          {items.map(item => (
+            <div key={item.id} className="flex items-center gap-2">
+              <input
+                value={item.medication} onChange={e => updRow(item.id, 'medication', e.target.value)}
+                placeholder="Medication"
+                className="w-2/5 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              <input
+                value={item.reaction} onChange={e => updRow(item.id, 'reaction', e.target.value)}
+                placeholder="Allergy / intolerance"
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              <button onClick={() => remove(item.id)} title="Remove"
+                className="shrink-0 text-gray-300 hover:text-red-500 transition">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Shared UI primitives ───────────────────────────────────────────────────────
 function Field({ label, hint, children }) {
   return (
@@ -806,10 +855,10 @@ function SymptomsPanel({ form, upd }) {
         onChange={v => upd('medications', v)}
       />
 
-      <Field label="Medication Allergies or Intolerances">
-        <TextInput value={form.medicationAllergies} onChange={v => upd('medicationAllergies', v)}
-          placeholder="e.g. Penicillin allergy; NKDA (no known drug allergies)" />
-      </Field>
+      <AllergyTable
+        items={form.medicationAllergies}
+        onChange={v => upd('medicationAllergies', v)}
+      />
 
       <Field label="Other Significant Health Conditions / Comorbidities">
         <TextArea value={form.comorbidities} onChange={v => upd('comorbidities', v)}
@@ -918,6 +967,11 @@ function migrateProfile(p) {
   } else if (Array.isArray(f.sideEffects) && f.sideEffects.length > 0) {
     // merge any previously saved sideEffects entries into symptoms
     f.symptoms = [...f.symptoms, ...f.sideEffects];
+  }
+  if (!Array.isArray(f.medicationAllergies)) {
+    f.medicationAllergies = f.medicationAllergies
+      ? [{ id: newId(), medication: '', reaction: f.medicationAllergies }]
+      : [];
   }
   if (!Array.isArray(f.medications)) {
     f.medications = f.currentMedications ? [{ id: newId(), name: f.currentMedications, dosage: '', frequencyType: 'recurring', frequencyCount: '', frequencyUnit: 'day', startDate: f.medicationsStartDate || '', endDate: f.medicationsEndDate || '', date: '', notes: '' }] : [];

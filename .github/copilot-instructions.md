@@ -8,6 +8,12 @@ Before implementing any UI change, ask:
 - Does the layout use `grid-cols-2` or multi-column? Check it on 360px width.
 - Does any new modal/overlay have a z-index? Confirm it doesn't conflict with sidebar (`z-50`), settings (`z-50`), or tutorial (`z-[200]`).
 
+### Mobile anti-patterns to catch on every new component
+- **`opacity-0 group-hover:opacity-100`** on action buttons → invisible on touch devices. Use `sm:opacity-0 sm:group-hover:opacity-100` so buttons are always visible on mobile.
+- **Fixed-column grids** (`grid-cols-[1fr_auto_auto_auto_auto]` or similar with 4+ columns) → crush to unreadable widths at 360px. Use a 2-line card layout (name + meta row) instead of a table grid, or hide non-essential columns below `sm:`.
+- **Fixed widths without breakpoint prefix** (`w-48`, `w-64`) inside flex/grid containers → can overflow narrow screens. Always use `w-full sm:w-48`.
+- **`whitespace-nowrap` on date/badge spans** combined with long text in adjacent `flex-1` element → verify the total row still fits at 320px.
+
 ## Cross-System Impact
 Before implementing any change, ask:
 - **App.jsx state flags** — does this change affect `showQ`, `showSettings`, `showTutorial`, `tutorialSettingsTab`, or `isFirstVisit`? Check all render guards and every place those flags are set/read.

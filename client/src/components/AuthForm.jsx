@@ -12,9 +12,6 @@ export default function AuthForm({ onSuccess, compact = false }) {
   // Only expose test-account option when URL contains ?dev
   const showDevOption = new URLSearchParams(window.location.search).has('dev')
     || window.location.hostname.includes('staging');
-  const isProduction = !window.location.hostname.includes('staging')
-    && window.location.hostname !== 'localhost'
-    && window.location.hostname !== '127.0.0.1';
   const [isTest, setIsTest]     = useState(false);
   const [error, setError]       = useState(null);
   const [loading, setLoading]   = useState(false);
@@ -41,19 +38,6 @@ export default function AuthForm({ onSuccess, compact = false }) {
 
   // ── Forgot-password views ────────────────────────────────────────────────
   if (mode === 'forgot') {
-    if (isProduction) {
-      return (
-        <div className="text-center py-2">
-          <div className="text-3xl mb-3">🚧</div>
-          <h2 className="text-base font-semibold text-gray-900 mb-2">Coming soon</h2>
-          <p className="text-sm text-gray-500 mb-5">Password recovery is still in development. Please contact support if you need access to your account.</p>
-          <button onClick={() => { setMode('login'); setError(null); }}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">
-            ← Back to sign in
-          </button>
-        </div>
-      );
-    }
     if (forgotSent) {
       return (
         <div className="text-center py-2">
@@ -195,7 +179,7 @@ export default function AuthForm({ onSuccess, compact = false }) {
             placeholder={mode === 'register' ? 'At least 8 characters' : '••••••••'}
             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
           />
-          {mode === 'login' && !isProduction && (
+          {mode === 'login' && (
             <button type="button" onClick={() => { setMode('forgot'); setError(null); }}
               className="text-xs text-blue-500 hover:text-blue-700 mt-1 float-right transition-colors">
               Forgot password?

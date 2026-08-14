@@ -14,9 +14,8 @@ import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 // Early-exit routes that don't need auth
 const sharedToken = window.location.pathname.match(/^\/shared\/(\w[\w-]*)/)?.[1] ?? null;
 const resetToken  = window.location.pathname === '/reset-password'
-  && (window.location.hostname.includes('staging') || window.location.hostname === 'localhost')
-    ? new URLSearchParams(window.location.search).get('token')
-    : null;
+  ? new URLSearchParams(window.location.search).get('token')
+  : null;
 
 export default function App() {
   const { token, user, authFetch, logout } = useAuth();

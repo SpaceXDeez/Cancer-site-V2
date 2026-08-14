@@ -22,6 +22,9 @@ const app  = express();
 const PORT = process.env.PORT || 3001;
 const isProd = process.env.NODE_ENV === 'production';
 
+// Trust Railway/proxy X-Forwarded-For headers for accurate rate limiting
+app.set('trust proxy', 1);
+
 // ── Security headers ──────────────────────────────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: isProd ? undefined : false, // relax CSP in dev for Vite HMR

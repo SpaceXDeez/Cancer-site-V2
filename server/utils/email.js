@@ -1,21 +1,57 @@
-const nodemailer = require('nodemailer');
+// Uses Resend HTTP API directly — avoids SMTP port blocking on Railway
+async function sendPasswordResetEmail(toEmail, resetUrl) {
+  const apiKey = process.env.SMTP_PASS; // SMTP_PASS holds the Resend API key
+  const from   = process.env.SMTP_FROM || 'Bell Guide <noreply@bell-guide.com>';
 
-let transporter = null;
-
-function getTransporter() {
-  if (!transporter && process.env.SMTP_HOST) {
-    transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587', 10),
-      secure: process.env.SMTP_PORT === '465',
-      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
-    });
+  if (!apiKey) {
+    console.log(`[PASSWORD RESET] No API key configured. Link for ${toEmail}:\n  ${resetUrl}`);
+    return;
   }
-  return transporter;
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method:  'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from,
+      to: [toEmail],
+      subject: 'Reset your Bell Guide password',
+      text: [
+        'You requested a password reset for your Bell Guide account.',
+        '',
+        'Click the link below to set a new password. This link expires in 1 hour.',
+        '',
+        resetUrl,
+        '',
+        "If you didn't request this, you can safely ignore this email.",
+      ].join('\n'),
+      html: `
+        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
+          <h2 style="color:#1d4ed8;margin-top:0">Reset your password</h2>
+          <p style="color:#374151">You requested a password reset for your <strong>Bell Guide</strong> account.</p>
+          <p style="color:#374151">Click the button below to set a new password.
+             This link expires in <strong>1 hour</strong>.</p>
+          <a href="${resetUrl}"
+             style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;
+                    padding:12px 28px;border-radius:8px;font-weight:600;margin:16px 0;font-size:15px">
+            Reset password
+          </a>
+          <p style="color:#6b7280;font-size:13px">
+            If you didn't request this, you can safely ignore this email —
+            your password won't change.
+          </p>
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
+          <p style="color:#9ca3af;font-size:11px">Bell Guide</p>
+        </div>`,
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Resend API error ${res.status}: ${body}`);
+  }
 }
+
+module.exports = { sendPasswordResetEmail };
 
 async function sendPasswordResetEmail(toEmail, resetUrl) {
   const t = getTransporter();

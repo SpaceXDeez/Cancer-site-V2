@@ -790,17 +790,10 @@ function SymptomsPanel({ form, upd }) {
       <SectionTitle title="Symptoms & Medications" subtitle="Track symptoms, side effects, and medications. Add as many entries as needed." />
 
       <SymptomTable
-        label="Symptoms"
-        hint="Current or recent symptoms — e.g. pain, fatigue, shortness of breath."
+        label="Symptoms & Side Effects"
+        hint="Anything you're experiencing — cancer symptoms, chemo side effects, post-surgery issues, etc."
         items={form.symptoms}
         onChange={v => upd('symptoms', v)}
-      />
-
-      <SymptomTable
-        label="Side Effects from Treatment"
-        hint="Side effects from chemotherapy, radiation, or surgery — e.g. nausea, mucositis, neuropathy."
-        items={form.sideEffects}
-        onChange={v => upd('sideEffects', v)}
       />
 
       <MedicationTable
@@ -896,7 +889,7 @@ const SECTION_FIELDS = {
   treatment:  ['treatmentPhase','chemoRegimens','cyclesCompleted','hadSurgery','hadRadiation','hadSCT'],
   status:     ['currentStatus','chemoResponse','lastScanResult','lastScanDate','performanceStatus','ctdnaTested'],
   relapse:    ['hasRelapsed','relapseDate','relapseSites','postRelapseTreatments'],
-  symptoms:   ['symptoms','sideEffects','medications','medicationAllergies'],
+  symptoms:   ['symptoms','medications','medicationAllergies'],
   careteam:   ['treatingInstitution','oncologistName','inClinicalTrial','willingToTravel','insuranceType'],
   additional: ['mainConcerns','additionalContext'],
 };
@@ -912,11 +905,14 @@ function sectionHasData(sectionId, form) {
 // ── Main Questionnaire component ───────────────────────────────────────────────
 function migrateProfile(p) {
   const f = { ...p };
+  const migratedSymptoms = [];
+  if (f.currentSymptoms) migratedSymptoms.push({ id: newId(), description: f.currentSymptoms, persistence: 'consistent', startDate: f.symptomsStartDate || '', endDate: f.symptomsEndDate || '' });
+  if (f.currentSideEffects) migratedSymptoms.push({ id: newId(), description: f.currentSideEffects, persistence: 'consistent', startDate: f.sideEffectsStartDate || '', endDate: f.sideEffectsEndDate || '' });
   if (!Array.isArray(f.symptoms)) {
-    f.symptoms = f.currentSymptoms ? [{ id: newId(), description: f.currentSymptoms, persistence: 'consistent', startDate: f.symptomsStartDate || '', endDate: f.symptomsEndDate || '' }] : [];
-  }
-  if (!Array.isArray(f.sideEffects)) {
-    f.sideEffects = f.currentSideEffects ? [{ id: newId(), description: f.currentSideEffects, persistence: 'consistent', startDate: f.sideEffectsStartDate || '', endDate: f.sideEffectsEndDate || '' }] : [];
+    f.symptoms = migratedSymptoms;
+  } else if (Array.isArray(f.sideEffects) && f.sideEffects.length > 0) {
+    // merge any previously saved sideEffects entries into symptoms
+    f.symptoms = [...f.symptoms, ...f.sideEffects];
   }
   if (!Array.isArray(f.medications)) {
     f.medications = f.currentMedications ? [{ id: newId(), name: f.currentMedications, dosage: '', frequencyType: 'recurring', frequencyCount: '', frequencyUnit: 'day', startDate: f.medicationsStartDate || '', endDate: f.medicationsEndDate || '', date: '', notes: '' }] : [];

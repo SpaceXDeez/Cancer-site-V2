@@ -177,10 +177,13 @@ function buildPatientContext(profile) {
     }
     add('Treatments After Relapse', profile.postRelapseTreatments);
   }
-  // Symptoms — new array format or legacy string
-  if (Array.isArray(profile.symptoms) && profile.symptoms.length > 0) {
-    lines.push('Symptoms:');
-    profile.symptoms.forEach(s => {
+  // Symptoms & side effects — new array format or legacy strings
+  const symptomEntries = Array.isArray(profile.symptoms) ? profile.symptoms : [];
+  const sideEffectEntries = Array.isArray(profile.sideEffects) ? profile.sideEffects : [];
+  const allSymptoms = [...symptomEntries, ...sideEffectEntries];
+  if (allSymptoms.length > 0) {
+    lines.push('Symptoms & Side Effects:');
+    allSymptoms.forEach(s => {
       let line = `  - ${s.description}`;
       if (s.persistence) line += ` (${s.persistence})`;
       if (s.startDate) line += ` — from ${s.startDate}`;
@@ -188,26 +191,18 @@ function buildPatientContext(profile) {
       else if (s.startDate) line += ` (ongoing)`;
       lines.push(line);
     });
-  } else if (profile.currentSymptoms) {
-    let symptomLine = `Current Symptoms: ${profile.currentSymptoms}`;
-    if (profile.symptomsStartDate) symptomLine += ` (from ${profile.symptomsStartDate}${profile.symptomsEndDate ? ` to ${profile.symptomsEndDate}` : ' — ongoing'})`;
-    lines.push(symptomLine);
-  }
-  // Side effects — new array format or legacy string
-  if (Array.isArray(profile.sideEffects) && profile.sideEffects.length > 0) {
-    lines.push('Side Effects from Treatment:');
-    profile.sideEffects.forEach(s => {
-      let line = `  - ${s.description}`;
-      if (s.persistence) line += ` (${s.persistence})`;
-      if (s.startDate) line += ` — from ${s.startDate}`;
-      if (s.endDate) line += ` to ${s.endDate}`;
-      else if (s.startDate) line += ` (ongoing)`;
+  } else {
+    // Legacy string format
+    if (profile.currentSymptoms) {
+      let line = `Current Symptoms: ${profile.currentSymptoms}`;
+      if (profile.symptomsStartDate) line += ` (from ${profile.symptomsStartDate}${profile.symptomsEndDate ? ` to ${profile.symptomsEndDate}` : ' — ongoing'})`;
       lines.push(line);
-    });
-  } else if (profile.currentSideEffects) {
-    let seLine = `Current Side Effects: ${profile.currentSideEffects}`;
-    if (profile.sideEffectsStartDate) seLine += ` (from ${profile.sideEffectsStartDate}${profile.sideEffectsEndDate ? ` to ${profile.sideEffectsEndDate}` : ' — ongoing'})`;
-    lines.push(seLine);
+    }
+    if (profile.currentSideEffects) {
+      let line = `Current Side Effects: ${profile.currentSideEffects}`;
+      if (profile.sideEffectsStartDate) line += ` (from ${profile.sideEffectsStartDate}${profile.sideEffectsEndDate ? ` to ${profile.sideEffectsEndDate}` : ' — ongoing'})`;
+      lines.push(line);
+    }
   }
   // Medications — new array format or legacy string
   if (Array.isArray(profile.medications) && profile.medications.length > 0) {

@@ -21,6 +21,9 @@ export default function ResetPasswordPage({ token }) {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Something went wrong.'); return; }
+      // Clear any existing session so the user must sign in with the new password
+      localStorage.removeItem('es_token');
+      localStorage.removeItem('es_user');
       setSuccess(true);
     } catch {
       setError('Could not connect to the server.');

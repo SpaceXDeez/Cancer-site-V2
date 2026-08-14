@@ -132,7 +132,9 @@ router.post('/reset-password', async (req, res) => {
     const hash = await bcrypt.hash(newPassword, 12);
     await db.updatePasswordHash(record.user_id, hash);
     await db.markPasswordResetUsed(token);
-    res.json({ message: 'Password reset successfully. You can now sign in.' });
+    const user = await db.getUserById(record.user_id);
+    const authToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    res.json({ message: 'Password reset successfully.', token: authToken, user: { id: user.id, email: user.email, isTest: !!user.is_test } });
   } catch (err) {
     console.error('Reset password error:', err.message);
     res.status(500).json({ error: 'Failed to reset password. Please try again.' });

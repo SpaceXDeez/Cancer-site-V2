@@ -86,7 +86,10 @@ router.delete('/account', requireAuth, async (req, res) => {
   }
 });
 
+const FEATURE_PASSWORD_RESET = process.env.NODE_ENV !== 'production';
+
 router.post('/forgot-password', async (req, res) => {
+  if (!FEATURE_PASSWORD_RESET) return res.status(503).json({ error: 'Password recovery is not yet available.' });
   const { email } = req.body;
   const isProd = process.env.NODE_ENV === 'production';
 
@@ -121,6 +124,7 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 router.post('/reset-password', async (req, res) => {
+  if (!FEATURE_PASSWORD_RESET) return res.status(503).json({ error: 'Password recovery is not yet available.' });
   const { token, newPassword } = req.body;
   if (typeof newPassword !== 'string' || newPassword.length < 8) {
     return res.status(400).json({ error: 'Password must be at least 8 characters.' });

@@ -177,17 +177,56 @@ function buildPatientContext(profile) {
     }
     add('Treatments After Relapse', profile.postRelapseTreatments);
   }
-  if (profile.currentSymptoms) {
+  // Symptoms — new array format or legacy string
+  if (Array.isArray(profile.symptoms) && profile.symptoms.length > 0) {
+    lines.push('Symptoms:');
+    profile.symptoms.forEach(s => {
+      let line = `  - ${s.description}`;
+      if (s.persistence) line += ` (${s.persistence})`;
+      if (s.startDate) line += ` — from ${s.startDate}`;
+      if (s.endDate) line += ` to ${s.endDate}`;
+      else if (s.startDate) line += ` (ongoing)`;
+      lines.push(line);
+    });
+  } else if (profile.currentSymptoms) {
     let symptomLine = `Current Symptoms: ${profile.currentSymptoms}`;
     if (profile.symptomsStartDate) symptomLine += ` (from ${profile.symptomsStartDate}${profile.symptomsEndDate ? ` to ${profile.symptomsEndDate}` : ' — ongoing'})`;
     lines.push(symptomLine);
   }
-  if (profile.currentSideEffects) {
+  // Side effects — new array format or legacy string
+  if (Array.isArray(profile.sideEffects) && profile.sideEffects.length > 0) {
+    lines.push('Side Effects from Treatment:');
+    profile.sideEffects.forEach(s => {
+      let line = `  - ${s.description}`;
+      if (s.persistence) line += ` (${s.persistence})`;
+      if (s.startDate) line += ` — from ${s.startDate}`;
+      if (s.endDate) line += ` to ${s.endDate}`;
+      else if (s.startDate) line += ` (ongoing)`;
+      lines.push(line);
+    });
+  } else if (profile.currentSideEffects) {
     let seLine = `Current Side Effects: ${profile.currentSideEffects}`;
     if (profile.sideEffectsStartDate) seLine += ` (from ${profile.sideEffectsStartDate}${profile.sideEffectsEndDate ? ` to ${profile.sideEffectsEndDate}` : ' — ongoing'})`;
     lines.push(seLine);
   }
-  if (profile.currentMedications) {
+  // Medications — new array format or legacy string
+  if (Array.isArray(profile.medications) && profile.medications.length > 0) {
+    lines.push('Medications:');
+    profile.medications.forEach(m => {
+      let line = `  - ${m.name}`;
+      if (m.dosage) line += ` ${m.dosage}`;
+      if (m.frequencyType === 'one-time') {
+        line += ` — one-time${m.date ? ` on ${m.date}` : ''}`;
+      } else {
+        if (m.frequencyCount && m.frequencyUnit) line += ` — ${m.frequencyCount}x/${m.frequencyUnit}`;
+        if (m.startDate) line += ` from ${m.startDate}`;
+        if (m.endDate) line += ` to ${m.endDate}`;
+        else if (m.startDate) line += ` (ongoing)`;
+      }
+      if (m.notes) line += ` — ${m.notes}`;
+      lines.push(line);
+    });
+  } else if (profile.currentMedications) {
     let medLine = `Current Medications: ${profile.currentMedications}`;
     if (profile.medicationsStartDate) medLine += ` (from ${profile.medicationsStartDate}${profile.medicationsEndDate ? ` to ${profile.medicationsEndDate}` : ' — ongoing'})`;
     lines.push(medLine);

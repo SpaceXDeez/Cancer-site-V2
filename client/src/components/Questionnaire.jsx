@@ -37,6 +37,312 @@ const SECTIONS = [
   { id: 'additional', label: 'Additional Notes',         icon: '📝' },
 ];
 
+const newId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+// ── SymptomTable — symptoms or side effects, unlimited rows ───────────────────
+function SymptomTable({ label, hint, items = [], onChange }) {
+  const blank = () => ({ id: newId(), description: '', persistence: 'consistent', startDate: '', endDate: '' });
+  const [draft, setDraft] = useState(null); // null | entry object
+  const [editId, setEditId] = useState(null);
+
+  const upd = (k, v) => setDraft(d => ({ ...d, [k]: v }));
+
+  function openAdd() { setDraft(blank()); setEditId(null); }
+  function openEdit(item) { setDraft({ ...item }); setEditId(item.id); }
+
+  function save() {
+    if (!draft?.description?.trim()) return;
+    if (editId) {
+      onChange(items.map(i => i.id === editId ? draft : i));
+    } else {
+      onChange([...items, draft]);
+    }
+    setDraft(null); setEditId(null);
+  }
+
+  function remove(id) { onChange(items.filter(i => i.id !== id)); }
+
+  const fmtDate = d => {
+    if (!d) return null;
+    const [y, m] = d.split('-');
+    return `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]} ${y}`;
+  };
+
+  return (
+    <div className="mb-5">
+      <div className="flex items-center justify-between mb-1.5">
+        <div>
+          <span className="text-sm font-medium text-gray-700">{label}</span>
+          {items.length > 0 && <span className="ml-2 text-xs text-gray-400">{items.length} entr{items.length === 1 ? 'y' : 'ies'}</span>}
+        </div>
+        {!draft && (
+          <button onClick={openAdd}
+            className="text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors">
+            + Add
+          </button>
+        )}
+      </div>
+      {hint && <p className="text-xs text-gray-400 mb-2 leading-relaxed">{hint}</p>}
+
+      {/* Add / Edit form */}
+      {draft && (
+        <div className="border border-blue-200 bg-blue-50 rounded-lg p-3 mb-2 space-y-2">
+          <textarea
+            value={draft.description}
+            onChange={e => upd('description', e.target.value)}
+            placeholder="Describe the symptom or side effect…"
+            rows={2}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+          />
+          <div className="flex gap-3">
+            {['consistent', 'intermittent'].map(p => (
+              <label key={p} className="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" name={`persistence-${label}`} checked={draft.persistence === p}
+                  onChange={() => upd('persistence', p)} className="accent-blue-600" />
+                <span className="text-sm text-gray-700 capitalize">{p}</span>
+              </label>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Approx. start date</p>
+              <input type="date" value={draft.startDate} onChange={e => upd('startDate', e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Approx. end date <span className="text-gray-400">(blank = ongoing)</span></p>
+              <input type="date" value={draft.endDate} onChange={e => upd('endDate', e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button onClick={save}
+              className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors">
+              {editId ? 'Update' : 'Add'}
+            </button>
+            <button onClick={() => { setDraft(null); setEditId(null); }}
+              className="px-3 py-1.5 text-gray-600 text-xs font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Rows */}
+      {items.length > 0 && (
+        <div className="border border-gray-200 rounded-lg overflow-hidden divide-y divide-gray-100">
+          {items.map(item => (
+            <div key={item.id} className="flex items-start gap-2 px-3 py-2 bg-white hover:bg-gray-50 group">
+              <p className="flex-1 text-sm text-gray-800 leading-snug">{item.description}</p>
+              <span className={`shrink-0 text-xs px-1.5 py-0.5 rounded-full font-medium mt-0.5 ${item.persistence === 'consistent' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>
+                {item.persistence === 'consistent' ? 'Consistent' : 'Intermittent'}
+              </span>
+              <span className="shrink-0 text-xs text-gray-400 mt-0.5 whitespace-nowrap">
+                {fmtDate(item.startDate) || '?'} → {fmtDate(item.endDate) || 'ongoing'}
+              </span>
+              <button onClick={() => openEdit(item)} title="Edit"
+                className="shrink-0 text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition mt-0.5">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              <button onClick={() => remove(item.id)} title="Remove"
+                className="shrink-0 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition mt-0.5">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {items.length === 0 && !draft && (
+        <p className="text-xs text-gray-400 italic">None added yet.</p>
+      )}
+    </div>
+  );
+}
+
+// ── MedicationTable — unlimited rows, scales to 100+ ─────────────────────────
+function MedicationTable({ items = [], onChange }) {
+  const blank = () => ({
+    id: newId(), name: '', dosage: '', frequencyType: 'recurring',
+    frequencyCount: '', frequencyUnit: 'day', startDate: '', endDate: '', date: '', notes: '',
+  });
+  const [draft, setDraft] = useState(null);
+  const [editId, setEditId] = useState(null);
+
+  const upd = (k, v) => setDraft(d => ({ ...d, [k]: v }));
+
+  function openAdd() { setDraft(blank()); setEditId(null); }
+  function openEdit(item) { setDraft({ ...item }); setEditId(item.id); }
+
+  function save() {
+    if (!draft?.name?.trim()) return;
+    if (editId) {
+      onChange(items.map(i => i.id === editId ? draft : i));
+    } else {
+      onChange([...items, draft]);
+    }
+    setDraft(null); setEditId(null);
+  }
+
+  function remove(id) { onChange(items.filter(i => i.id !== id)); }
+
+  function freqLabel(item) {
+    if (item.frequencyType === 'one-time') return 'Once';
+    const unit = { day: '/day', week: '/wk', month: '/mo' }[item.frequencyUnit] || '';
+    return item.frequencyCount ? `${item.frequencyCount}×${unit}` : 'Recurring';
+  }
+
+  const fmtDate = d => {
+    if (!d) return null;
+    const [y, m] = d.split('-');
+    return `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]} ${y}`;
+  };
+
+  return (
+    <div className="mb-5">
+      <div className="flex items-center justify-between mb-1.5">
+        <div>
+          <span className="text-sm font-medium text-gray-700">Medications</span>
+          {items.length > 0 && <span className="ml-2 text-xs text-gray-400">{items.length} medication{items.length === 1 ? '' : 's'}</span>}
+        </div>
+        {!draft && (
+          <button onClick={openAdd}
+            className="text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors">
+            + Add
+          </button>
+        )}
+      </div>
+      <p className="text-xs text-gray-400 mb-2 leading-relaxed">Include chemo drugs, supportive care, and any other medications.</p>
+
+      {/* Add / Edit form */}
+      {draft && (
+        <div className="border border-blue-200 bg-blue-50 rounded-lg p-3 mb-2 space-y-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <p className="text-xs text-gray-600 font-medium mb-1">Medication name *</p>
+              <input value={draft.name} onChange={e => upd('name', e.target.value)}
+                placeholder="e.g. Vincristine, Ondansetron…"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-600 font-medium mb-1">Dosage</p>
+              <input value={draft.dosage} onChange={e => upd('dosage', e.target.value)}
+                placeholder="e.g. 1.5 mg/m², 8 mg"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            </div>
+          </div>
+
+          {/* Frequency type toggle */}
+          <div className="flex gap-3">
+            {[{v:'recurring',l:'Recurring'},{v:'one-time',l:'One-time'}].map(({v,l}) => (
+              <label key={v} className="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" name={`freqType-${draft.id}`} checked={draft.frequencyType === v}
+                  onChange={() => upd('frequencyType', v)} className="accent-blue-600" />
+                <span className="text-sm text-gray-700">{l}</span>
+              </label>
+            ))}
+          </div>
+
+          {draft.frequencyType === 'recurring' ? (
+            <>
+              <div className="flex items-center gap-2">
+                <input value={draft.frequencyCount} onChange={e => upd('frequencyCount', e.target.value)}
+                  placeholder="e.g. 2" type="number" min="1"
+                  className="w-20 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                <span className="text-sm text-gray-600">times per</span>
+                <select value={draft.frequencyUnit} onChange={e => upd('frequencyUnit', e.target.value)}
+                  className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                  <option value="day">Day</option>
+                  <option value="week">Week</option>
+                  <option value="month">Month</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Start date</p>
+                  <input type="date" value={draft.startDate} onChange={e => upd('startDate', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">End date <span className="text-gray-400">(blank = ongoing)</span></p>
+                  <input type="date" value={draft.endDate} onChange={e => upd('endDate', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Date administered</p>
+              <input type="date" value={draft.date} onChange={e => upd('date', e.target.value)}
+                className="w-48 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            </div>
+          )}
+
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Notes <span className="text-gray-400">(optional)</span></p>
+            <input value={draft.notes} onChange={e => upd('notes', e.target.value)}
+              placeholder="e.g. Discontinued due to side effects, replaced by…"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <button onClick={save}
+              className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors">
+              {editId ? 'Update' : 'Add'}
+            </button>
+            <button onClick={() => { setDraft(null); setEditId(null); }}
+              className="px-3 py-1.5 text-gray-600 text-xs font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Medication rows — compact for large lists */}
+      {items.length > 0 && (
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          {/* Header */}
+          <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 px-3 py-1.5 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500">
+            <span>Medication</span><span>Dosage</span><span>Frequency</span><span>Dates</span><span></span>
+          </div>
+          <div className="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+            {items.map(item => (
+              <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 items-center px-3 py-2 bg-white hover:bg-gray-50 group text-xs">
+                <span className="font-medium text-gray-800 truncate">{item.name}</span>
+                <span className="text-gray-500 whitespace-nowrap">{item.dosage || '—'}</span>
+                <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full whitespace-nowrap">{freqLabel(item)}</span>
+                <span className="text-gray-400 whitespace-nowrap">
+                  {item.frequencyType === 'one-time'
+                    ? (fmtDate(item.date) || '—')
+                    : `${fmtDate(item.startDate) || '?'} → ${fmtDate(item.endDate) || 'ongoing'}`}
+                </span>
+                <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition">
+                  <button onClick={() => openEdit(item)} title="Edit" className="text-gray-400 hover:text-blue-500">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button onClick={() => remove(item.id)} title="Remove" className="text-gray-400 hover:text-red-500">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {items.length === 0 && !draft && (
+        <p className="text-xs text-gray-400 italic">None added yet.</p>
+      )}
+    </div>
+  );
+}
+
 // ── Shared UI primitives ───────────────────────────────────────────────────────
 function Field({ label, hint, children }) {
   return (
@@ -481,48 +787,26 @@ function RelapsePanel({ form, upd, tog }) {
 function SymptomsPanel({ form, upd }) {
   return (
     <>
-      <SectionTitle title="Symptoms & Medications" subtitle="Current symptoms, side effects, and medications." />
+      <SectionTitle title="Symptoms & Medications" subtitle="Track symptoms, side effects, and medications. Add as many entries as needed." />
 
-      <Field label="Symptoms" hint="Describe current symptoms.">
-        <TextArea value={form.currentSymptoms} onChange={v => upd('currentSymptoms', v)}
-          placeholder="e.g. Fatigue, pain at tumor site, shortness of breath, decreased appetite..." rows={3} />
-      </Field>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 mb-5">
-        <Field label="Symptoms — Start Date">
-          <TextInput value={form.symptomsStartDate} onChange={v => upd('symptomsStartDate', v)} type="date" />
-        </Field>
-        <Field label="Symptoms — End Date" hint="Leave blank if ongoing.">
-          <TextInput value={form.symptomsEndDate} onChange={v => upd('symptomsEndDate', v)} type="date" />
-        </Field>
-      </div>
+      <SymptomTable
+        label="Symptoms"
+        hint="Current or recent symptoms — e.g. pain, fatigue, shortness of breath."
+        items={form.symptoms}
+        onChange={v => upd('symptoms', v)}
+      />
 
-      <Field label="Side Effects from Treatment"
-        hint="Side effects from chemotherapy, radiation, or surgery.">
-        <TextArea value={form.currentSideEffects} onChange={v => upd('currentSideEffects', v)}
-          placeholder="e.g. Nausea, mucositis, peripheral neuropathy, hearing loss, low counts..." rows={3} />
-      </Field>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 mb-5">
-        <Field label="Side Effects — Start Date">
-          <TextInput value={form.sideEffectsStartDate} onChange={v => upd('sideEffectsStartDate', v)} type="date" />
-        </Field>
-        <Field label="Side Effects — End Date" hint="Leave blank if ongoing.">
-          <TextInput value={form.sideEffectsEndDate} onChange={v => upd('sideEffectsEndDate', v)} type="date" />
-        </Field>
-      </div>
+      <SymptomTable
+        label="Side Effects from Treatment"
+        hint="Side effects from chemotherapy, radiation, or surgery — e.g. nausea, mucositis, neuropathy."
+        items={form.sideEffects}
+        onChange={v => upd('sideEffects', v)}
+      />
 
-      <Field label="Current Medications"
-        hint="Include chemo drugs, supportive care, and any other medications.">
-        <TextArea value={form.currentMedications} onChange={v => upd('currentMedications', v)}
-          placeholder="e.g. Vincristine, Doxorubicin, Ondansetron (Zofran), G-CSF (Neupogen), Mesna..." rows={3} />
-      </Field>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 mb-5">
-        <Field label="Medications — Start Date">
-          <TextInput value={form.medicationsStartDate} onChange={v => upd('medicationsStartDate', v)} type="date" />
-        </Field>
-        <Field label="Medications — End Date" hint="Leave blank if ongoing.">
-          <TextInput value={form.medicationsEndDate} onChange={v => upd('medicationsEndDate', v)} type="date" />
-        </Field>
-      </div>
+      <MedicationTable
+        items={form.medications}
+        onChange={v => upd('medications', v)}
+      />
 
       <Field label="Medication Allergies or Intolerances">
         <TextInput value={form.medicationAllergies} onChange={v => upd('medicationAllergies', v)}
@@ -612,7 +896,7 @@ const SECTION_FIELDS = {
   treatment:  ['treatmentPhase','chemoRegimens','cyclesCompleted','hadSurgery','hadRadiation','hadSCT'],
   status:     ['currentStatus','chemoResponse','lastScanResult','lastScanDate','performanceStatus','ctdnaTested'],
   relapse:    ['hasRelapsed','relapseDate','relapseSites','postRelapseTreatments'],
-  symptoms:   ['currentSymptoms','symptomsStartDate','currentSideEffects','sideEffectsStartDate','currentMedications','medicationsStartDate','medicationAllergies'],
+  symptoms:   ['symptoms','sideEffects','medications','medicationAllergies'],
   careteam:   ['treatingInstitution','oncologistName','inClinicalTrial','willingToTravel','insuranceType'],
   additional: ['mainConcerns','additionalContext'],
 };
@@ -626,8 +910,22 @@ function sectionHasData(sectionId, form) {
 }
 
 // ── Main Questionnaire component ───────────────────────────────────────────────
+function migrateProfile(p) {
+  const f = { ...p };
+  if (!Array.isArray(f.symptoms)) {
+    f.symptoms = f.currentSymptoms ? [{ id: newId(), description: f.currentSymptoms, persistence: 'consistent', startDate: f.symptomsStartDate || '', endDate: f.symptomsEndDate || '' }] : [];
+  }
+  if (!Array.isArray(f.sideEffects)) {
+    f.sideEffects = f.currentSideEffects ? [{ id: newId(), description: f.currentSideEffects, persistence: 'consistent', startDate: f.sideEffectsStartDate || '', endDate: f.sideEffectsEndDate || '' }] : [];
+  }
+  if (!Array.isArray(f.medications)) {
+    f.medications = f.currentMedications ? [{ id: newId(), name: f.currentMedications, dosage: '', frequencyType: 'recurring', frequencyCount: '', frequencyUnit: 'day', startDate: f.medicationsStartDate || '', endDate: f.medicationsEndDate || '', date: '', notes: '' }] : [];
+  }
+  return f;
+}
+
 export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }) {
-  const [form, setForm]         = useState({ ...profile });
+  const [form, setForm]         = useState(() => migrateProfile(profile));
   const [active, setActive]     = useState('basics');
   const [wizardStep, setWizardStep] = useState(0); // only used when isFirstVisit
 

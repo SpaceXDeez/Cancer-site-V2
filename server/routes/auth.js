@@ -91,7 +91,6 @@ router.post('/forgot-password', async (req, res) => {
   const isProd = process.env.NODE_ENV === 'production';
 
   if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-    // Always 200 — never reveal whether email exists
     return res.json({ message: 'If an account with that email exists, a reset link has been sent.' });
   }
   try {
@@ -104,12 +103,17 @@ router.post('/forgot-password', async (req, res) => {
     await db.createPasswordReset(token, user.id, expiresAt);
     const appUrl   = process.env.APP_URL || 'https://ewing-support-ai.up.railway.app';
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
-    await sendPasswordResetEmail(user.email, resetUrl);
-    // On staging/dev include the URL in the response so it's testable without SMTP
-    if (!isProd) {
-      return res.json({ message: 'If an account with that email exists, a reset link has been sent.', devResetUrl: resetUrl });
-    }
-    res.json({ message: 'If an account with that email exists, a reset link has been sent.' });
+
+    // Respond immediately — never block on SMTP
+    res.json(isProd
+      ? { message: 'If an account with that email exists, a reset link has been sent.' }
+      : { message: 'If an account with that email exists, a reset link has been sent.', devResetUrl: resetUrl }
+    );
+
+    // Send email in background
+    sendPasswordResetEmail(user.email, resetUrl).catch(err =>
+      console.error('Email send failed:', err.message)
+    );
   } catch (err) {
     console.error('Forgot password error:', err.message);
     res.json({ message: 'If an account with that email exists, a reset link has been sent.' });

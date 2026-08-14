@@ -8,6 +8,7 @@ export default function AuthForm({ onSuccess, compact = false }) {
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
+  const [devResetUrl, setDevResetUrl] = useState(null);
   // Only expose test-account option when URL contains ?dev
   const showDevOption = new URLSearchParams(window.location.search).has('dev')
     || window.location.hostname.includes('staging');
@@ -20,11 +21,13 @@ export default function AuthForm({ onSuccess, compact = false }) {
     setError(null);
     setLoading(true);
     try {
-      await fetch('/api/auth/forgot-password', {
+      const res  = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),
       });
+      const data = await res.json();
+      if (data.devResetUrl) setDevResetUrl(data.devResetUrl);
       setForgotSent(true);
     } catch {
       setError('Could not connect to the server.');
@@ -44,8 +47,15 @@ export default function AuthForm({ onSuccess, compact = false }) {
             If an account with that address exists, we've sent a reset link.
             Check your inbox (and spam folder).
           </p>
+          {devResetUrl && (
+            <div className="mb-5 text-left bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-xs font-semibold text-amber-700 mb-1">⚠️ Staging — SMTP not configured</p>
+              <p className="text-xs text-amber-600 mb-2">No email was sent. Use this link to reset:</p>
+              <a href={devResetUrl} className="text-xs text-blue-600 break-all underline">{devResetUrl}</a>
+            </div>
+          )}
           <button
-            onClick={() => { setMode('login'); setForgotSent(false); setError(null); }}
+            onClick={() => { setMode('login'); setForgotSent(false); setDevResetUrl(null); setError(null); }}
             className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">
             ← Back to sign in
           </button>

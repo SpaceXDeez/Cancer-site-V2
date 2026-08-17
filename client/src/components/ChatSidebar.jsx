@@ -78,6 +78,18 @@ export default function ChatSidebar({
           </svg>
           Home
         </button>
+        <button
+          onClick={() => { onSetView('files'); onCloseSidebar(); }}
+          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+            view === 'files' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+          }`}
+        >
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M3 7a2 2 0 012-2h4l2 2h6a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+          </svg>
+          My Files
+        </button>
       </div>
 
       {/* New chat */}

@@ -465,11 +465,64 @@ app.post('/api/upload', requireAuth, dailyUploadLimiter, uploadLimiter, (req, re
     }
 
     const truncated = truncate(text);
-    await db.saveDocument(req.user.userId, originalname, truncated);
-    res.json({ text: truncated, filename: originalname });
+
+    // Run AI analysis: summary + medication extraction (fire in background-ish but await for response)
+    let aiSummary = '';
+    try {
+      const analysis = await anthropic.messages.create({
+        model: 'claude-opus-4-5',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: `Analyze this medical document and return JSON only — no other text.
+
+Fields:
+- "summary": 2-3 sentence plain-language summary of the document's key content and findings.
+- "medications": array of any medications, chemo drugs, or supplements mentioned, each as { name, dosage, frequency, notes }. Empty array if none.
+
+Document:
+${truncated.slice(0, 8000)}`,
+        }],
+      });
+      const raw = analysis.content[0].text.trim().replace(/^```json\s*/,'').replace(/```\s*$/,'');
+      JSON.parse(raw); // validate
+      aiSummary = raw;
+    } catch { /* analysis is best-effort */ }
+
+    await db.saveDocument(req.user.userId, originalname, truncated, aiSummary);
+    res.json({ text: truncated, filename: originalname, aiSummary: aiSummary ? JSON.parse(aiSummary) : null });
   } catch (err) {
     console.error('Upload error:', err.message);
     res.status(500).json({ error: 'Failed to process file. Please try again.' });
+  }
+});
+
+// ── Documents — list / get / delete ──────────────────────────────────────────
+app.get('/api/documents', requireAuth, async (req, res) => {
+  try {
+    const docs = await db.getUserDocuments(req.user.userId);
+    res.json({ documents: docs });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch documents.' });
+  }
+});
+
+app.get('/api/documents/:id', requireAuth, async (req, res) => {
+  try {
+    const doc = await db.getDocumentById(req.params.id, req.user.userId);
+    if (!doc) return res.status(404).json({ error: 'Not found.' });
+    res.json({ document: doc });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch document.' });
+  }
+});
+
+app.delete('/api/documents/:id', requireAuth, async (req, res) => {
+  try {
+    await db.deleteDocument(req.params.id, req.user.userId);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete document.' });
   }
 });
 

@@ -42,9 +42,9 @@ const SQLITE_SCHEMA = `
     user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     filename   TEXT    NOT NULL,
     text       TEXT    NOT NULL,
+    ai_summary TEXT    NOT NULL DEFAULT '',
     created_at TEXT    DEFAULT (datetime('now'))
   );
-  CREATE TABLE IF NOT EXISTS shared_messages (
     token      TEXT PRIMARY KEY,
     content    TEXT NOT NULL,
     created_at TEXT DEFAULT (datetime('now'))
@@ -88,6 +88,7 @@ const PG_SCHEMA = `
     user_id    BIGINT  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     filename   TEXT    NOT NULL,
     text       TEXT    NOT NULL,
+    ai_summary TEXT    NOT NULL DEFAULT '',
     created_at TIMESTAMPTZ DEFAULT NOW()
   );
   CREATE TABLE IF NOT EXISTS shared_messages (
@@ -131,8 +132,10 @@ async function initDb() {
       user_id    BIGINT  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       filename   TEXT    NOT NULL,
       text       TEXT    NOT NULL,
+      ai_summary TEXT    NOT NULL DEFAULT '',
       created_at TIMESTAMPTZ DEFAULT NOW()
     )`).catch(() => {});
+    await pool.query('ALTER TABLE documents ADD COLUMN IF NOT EXISTS ai_summary TEXT NOT NULL DEFAULT \'\'').catch(() => {});
     await pool.query(`CREATE TABLE IF NOT EXISTS password_reset_tokens (
       token      TEXT PRIMARY KEY,
       user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -147,6 +150,7 @@ async function initDb() {
     sqlite.exec('PRAGMA foreign_keys = ON');
     sqlite.exec(SQLITE_SCHEMA);
     try { sqlite.exec('ALTER TABLE users ADD COLUMN is_test INTEGER NOT NULL DEFAULT 0'); } catch { /* already exists */ }
+    try { sqlite.exec("ALTER TABLE documents ADD COLUMN ai_summary TEXT NOT NULL DEFAULT ''"); } catch { /* already exists */ }
     console.log('Using SQLite (local dev)');
   }
 }
@@ -294,16 +298,28 @@ const db = {
   },
 
   // Documents (persist across chats)
-  async saveDocument(userId, filename, text) {
+  async saveDocument(userId, filename, text, aiSummary = '') {
     const encName = encrypt(filename);
     const encText = encrypt(text);
-    if (IS_PG) return pgRun('INSERT INTO documents (user_id, filename, text) VALUES (?, ?, ?) RETURNING id', [userId, encName, encText]);
-    return sqRun('INSERT INTO documents (user_id, filename, text) VALUES (?, ?, ?)', [userId, encName, encText]);
+    const encSumm = encrypt(aiSummary);
+    if (IS_PG) return pgRun('INSERT INTO documents (user_id, filename, text, ai_summary) VALUES (?, ?, ?, ?) RETURNING id', [userId, encName, encText, encSumm]);
+    return sqRun('INSERT INTO documents (user_id, filename, text, ai_summary) VALUES (?, ?, ?, ?)', [userId, encName, encText, encSumm]);
   },
   async getUserDocuments(userId) {
-    const q = 'SELECT id, filename, text, created_at FROM documents WHERE user_id = ? ORDER BY created_at DESC LIMIT 10';
+    const q = 'SELECT id, filename, ai_summary, created_at FROM documents WHERE user_id = ? ORDER BY created_at DESC';
     const rows = IS_PG ? await pgAll(q, [userId]) : await sqAll(q, [userId]);
-    return rows.map(r => ({ ...r, filename: decrypt(r.filename), text: decrypt(r.text) }));
+    return rows.map(r => ({ ...r, filename: decrypt(r.filename), ai_summary: decrypt(r.ai_summary) }));
+  },
+  async getDocumentById(id, userId) {
+    const q = 'SELECT id, filename, text, ai_summary, created_at FROM documents WHERE id = ? AND user_id = ?';
+    const row = IS_PG ? await pgGet(q, [id, userId]) : await sqGet(q, [id, userId]);
+    if (!row) return null;
+    return { ...row, filename: decrypt(row.filename), text: decrypt(row.text), ai_summary: decrypt(row.ai_summary) };
+  },
+  async deleteDocument(id, userId) {
+    const q = 'DELETE FROM documents WHERE id = ? AND user_id = ?';
+    if (IS_PG) return pgRun(q, [id, userId]);
+    return sqRun(q, [id, userId]);
   },
 
   // Shared message links

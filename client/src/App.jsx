@@ -10,6 +10,7 @@ import TutorialOverlay from './components/TutorialOverlay.jsx';
 import ErrorBoundary   from './components/ErrorBoundary.jsx';
 import SharedMessageView from './components/SharedMessageView.jsx';
 import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
+import FilesPanel       from './components/FilesPanel.jsx';
 
 // Early-exit routes that don't need auth
 const sharedToken = window.location.pathname.match(/^\/shared\/(\w[\w-]*)/)?.[1] ?? null;
@@ -247,6 +248,12 @@ export default function App() {
               else handleNewChat();
             }}
           />
+        ) : view === 'files' ? (
+          <FilesPanel
+            authFetch={authFetch}
+            onUpdateProfile={handleUpdateProfile}
+            profile={profile}
+          />
         ) : currentChat ? (
           <ErrorBoundary key={currentChat.id}>
             <ChatWindow
@@ -283,7 +290,7 @@ export default function App() {
           </p>
           <div className="flex gap-2 flex-shrink-0">
             <button
-              onClick={() => { setShowReturnBanner(false); setShowSettings(true); }}
+              onClick={() => { setShowReturnBanner(false); setShowQ(true); }}
               className="text-xs text-blue-600 font-medium hover:text-blue-800 whitespace-nowrap"
             >
               Update

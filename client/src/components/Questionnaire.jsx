@@ -955,7 +955,7 @@ function SymptomsPanel({ form, upd }) {
       <SectionTitle title="Symptoms & Side Effects" subtitle="Track anything you're experiencing — cancer symptoms, chemo side effects, post-surgery issues, etc." />
 
       <SymptomTable
-        label="Symptoms & Side Effects"
+        label=""
         hint="Add as many entries as needed."
         items={form.symptoms}
         onChange={v => upd('symptoms', v)}
@@ -981,11 +981,11 @@ function MedicationsPanel({ form, upd }) {
     <>
       <SectionTitle title="Medications" subtitle="Manage current medications, allergies, and supplements." />
 
-      {/* Sub-tab bar */}
-      <div className="flex gap-1 mb-5 border-b border-gray-200 -mx-0.5">
+      {/* Sub-tab bar — overflow-x-auto prevents crush on narrow screens */}
+      <div className="flex gap-1 mb-5 border-b border-gray-200 overflow-x-auto -mx-0.5">
         {MED_TABS.map(t => (
           <button key={t.id} onClick={() => setMedTab(t.id)}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+            className={`flex-shrink-0 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
               medTab === t.id
                 ? 'text-blue-700 bg-blue-50 border border-gray-200 border-b-white -mb-px'
                 : 'text-gray-500 hover:text-gray-700'
@@ -1093,7 +1093,7 @@ const SECTION_FIELDS = {
   treatment:  ['treatmentPhase','chemoRegimens','cyclesCompleted','hadSurgery','hadRadiation','hadSCT'],
   status:     ['currentStatus','chemoResponse','lastScanResult','lastScanDate','performanceStatus','ctdnaTested'],
   relapse:    ['hasRelapsed','relapseDate','relapseSites','postRelapseTreatments'],
-  symptoms:    ['symptoms'],
+  symptoms:    ['symptoms', 'comorbidities'],
   medications:  ['medications','medicationAllergies','supplements'],
   careteam:   ['treatingInstitution','oncologistName','inClinicalTrial','willingToTravel','insuranceType'],
   additional: ['mainConcerns','additionalContext'],

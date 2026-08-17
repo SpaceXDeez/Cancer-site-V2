@@ -953,11 +953,9 @@ function RelapsePanel({ form, upd, tog }) {
 function SymptomsPanel({ form, upd }) {
   return (
     <>
-      <SectionTitle title="Symptoms & Side Effects" subtitle="Track anything you're experiencing — cancer symptoms, chemo side effects, post-surgery issues, etc." />
-
       <SymptomTable
-        label=""
-        hint="Add as many entries as needed."
+        label="Symptoms & Side Effects"
+        hint="Track anything you're experiencing — cancer symptoms, chemo side effects, post-surgery issues, etc."
         items={form.symptoms}
         onChange={v => upd('symptoms', v)}
       />

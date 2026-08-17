@@ -82,7 +82,7 @@ export default function HomePage({ isLoggedIn, user, onLoginClick, onStartChat }
         <div className="max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-blue-600/20 border border-blue-500/30 rounded-full px-4 py-1.5 mb-6">
             <span className="w-2 h-2 bg-blue-400 rounded-full" />
-            <span className="text-blue-300 text-xs font-medium tracking-wide uppercase">In partnership with XIT Foundation</span>
+            <span className="text-blue-300 text-xs font-medium tracking-wide uppercase">Bell Guide AI</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-white leading-snug mb-4">
             AI support for Ewing's sarcoma{' '}
@@ -205,7 +205,7 @@ export default function HomePage({ isLoggedIn, user, onLoginClick, onStartChat }
 
         {/* Partnership with XIT */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-3 border-b-2 border-blue-100">Built in partnership with XIT Foundation</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-3 border-b-2 border-blue-100">XIT Foundation</h2>
           <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6">
             <p className="text-gray-700 leading-relaxed mb-4">
               The <strong className="text-gray-800">XIT Foundation</strong> is a nonprofit organization with one goal:
@@ -214,8 +214,8 @@ export default function HomePage({ isLoggedIn, user, onLoginClick, onStartChat }
               and nucleic-acid therapies.
             </p>
             <p className="text-gray-700 leading-relaxed mb-5">
-              This AI tool was developed as part of XIT's commitment to supporting patients and families throughout the
-              treatment journey — ensuring that access to knowledge is never a barrier for any family facing this diagnosis.
+              XIT has collaborated on the development of this application by giving feedback on the app, and plan to
+              help spread the word about the app in the Ewing's community.
             </p>
             <a
               href="https://www.xit.org"

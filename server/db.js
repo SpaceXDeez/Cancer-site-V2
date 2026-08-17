@@ -310,6 +310,11 @@ const db = {
     const rows = IS_PG ? await pgAll(q, [userId]) : await sqAll(q, [userId]);
     return rows.map(r => ({ ...r, filename: decrypt(r.filename), ai_summary: decrypt(r.ai_summary) }));
   },
+  async getUserDocumentsWithText(userId) {
+    const q = 'SELECT id, filename, text, created_at FROM documents WHERE user_id = ? ORDER BY created_at DESC';
+    const rows = IS_PG ? await pgAll(q, [userId]) : await sqAll(q, [userId]);
+    return rows.map(r => ({ ...r, filename: decrypt(r.filename), text: decrypt(r.text) }));
+  },
   async getDocumentById(id, userId) {
     const q = 'SELECT id, filename, text, ai_summary, created_at FROM documents WHERE id = ? AND user_id = ?';
     const row = IS_PG ? await pgGet(q, [id, userId]) : await sqGet(q, [id, userId]);

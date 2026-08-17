@@ -326,7 +326,7 @@ app.post('/api/chat', requireAuth, chatLimiter, async (req, res) => {
 
     const profileRow = await db.getProfile(req.user.userId);
     const profile    = profileRow ? JSON.parse(profileRow.data) : {};
-    const docs       = await db.getUserDocuments(req.user.userId);
+    const docs       = await db.getUserDocumentsWithText(req.user.userId);
     const history    = await db.getMessages(chatId);
     const userDisplayName = profile?._settings?.displayName?.trim() || null;
 

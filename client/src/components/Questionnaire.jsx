@@ -32,10 +32,482 @@ const SECTIONS = [
   { id: 'treatment',  label: 'Treatment History',        icon: '💊' },
   { id: 'status',     label: 'Current Status',           icon: '📊' },
   { id: 'relapse',    label: 'Relapse',                  icon: '🔄' },
-  { id: 'symptoms',   label: 'Symptoms & Medications',   icon: '🩺' },
-  { id: 'careteam',   label: 'Care Team & Trials',       icon: '🏥' },
+  { id: 'symptoms',    label: 'Symptoms',                  icon: '🩺' },
+  { id: 'medications', label: 'Medications',                icon: '💊' },
+  { id: 'careteam',   label: 'Care Team & Trials',         icon: '🏥' },
   { id: 'additional', label: 'Additional Notes',         icon: '📝' },
 ];
+
+const newId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+// ── SymptomTable — symptoms or side effects, unlimited rows ───────────────────
+function SymptomTable({ label, hint, items = [], onChange }) {
+  const blank = () => ({ id: newId(), description: '', persistence: 'consistent', startDate: '', endDate: '' });
+  const [draft, setDraft] = useState(null); // null | entry object
+  const [editId, setEditId] = useState(null);
+
+  const upd = (k, v) => setDraft(d => ({ ...d, [k]: v }));
+
+  function openAdd() { setDraft(blank()); setEditId(null); }
+  function openEdit(item) { setDraft({ ...item }); setEditId(item.id); }
+
+  function save() {
+    if (!draft?.description?.trim()) return;
+    if (editId) {
+      onChange(items.map(i => i.id === editId ? draft : i));
+    } else {
+      onChange([...items, draft]);
+    }
+    setDraft(null); setEditId(null);
+  }
+
+  function remove(id) { onChange(items.filter(i => i.id !== id)); }
+
+  const fmtDate = d => {
+    if (!d) return null;
+    const [y, m] = d.split('-');
+    return `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]} ${y}`;
+  };
+
+  return (
+    <div className="mb-5">
+      <div className="flex items-center justify-between mb-1.5">
+        <div>
+          {label && <span className="text-sm font-medium text-gray-700">{label}</span>}
+          {label && items.length > 0 && <span className="ml-2 text-xs text-gray-400">{items.length} entr{items.length === 1 ? 'y' : 'ies'}</span>}
+          {!label && hint && <p className="text-xs text-gray-400 leading-relaxed">{hint}</p>}
+        </div>
+        {!draft && (
+          <button onClick={openAdd}
+            className="text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors flex-shrink-0">
+            + Add
+          </button>
+        )}
+      </div>
+      {label && hint && <p className="text-xs text-gray-400 mb-2 leading-relaxed">{hint}</p>}
+
+      {/* Add / Edit form */}
+      {draft && (
+        <div className="border border-blue-200 bg-blue-50 rounded-lg p-3 mb-2 space-y-2">
+          <textarea
+            value={draft.description}
+            onChange={e => upd('description', e.target.value)}
+            placeholder="Describe the symptom or side effect…"
+            rows={2}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+          />
+          <div className="flex gap-3">
+            {['consistent', 'intermittent'].map(p => (
+              <label key={p} className="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" name={`persistence-${label}`} checked={draft.persistence === p}
+                  onChange={() => upd('persistence', p)} className="accent-blue-600" />
+                <span className="text-sm text-gray-700 capitalize">{p}</span>
+              </label>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Approx. start date</p>
+              <input type="date" value={draft.startDate} onChange={e => upd('startDate', e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Approx. end date <span className="text-gray-400">(blank = ongoing)</span></p>
+              <input type="date" value={draft.endDate} onChange={e => upd('endDate', e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button onClick={save}
+              className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors">
+              {editId ? 'Update' : 'Add'}
+            </button>
+            <button onClick={() => { setDraft(null); setEditId(null); }}
+              className="px-3 py-1.5 text-gray-600 text-xs font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Rows */}
+      {items.length > 0 && (
+        <div className="border border-gray-200 rounded-lg overflow-hidden divide-y divide-gray-100">
+          {items.map(item => (
+            <div key={item.id} className="px-3 py-2.5 bg-white hover:bg-gray-50 group">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm text-gray-800 leading-snug flex-1">{item.description}</p>
+                {/* always visible on touch, hover-only on pointer devices */}
+                <div className="flex gap-2 shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition">
+                  <button onClick={() => openEdit(item)} title="Edit" className="text-gray-400 hover:text-blue-500">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button onClick={() => remove(item.id)} title="Remove" className="text-gray-400 hover:text-red-500">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1">
+                <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${item.persistence === 'consistent' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>
+                  {item.persistence === 'consistent' ? 'Consistent' : 'Intermittent'}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {fmtDate(item.startDate) || '?'} → {fmtDate(item.endDate) || 'ongoing'}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {items.length === 0 && !draft && (
+        <p className="text-xs text-gray-400 italic">None added yet.</p>
+      )}
+    </div>
+  );
+}
+
+// ── MedicationTable — unlimited rows, scales to 100+ ─────────────────────────
+function MedicationTable({ items = [], onChange }) {
+  const blank = () => ({
+    id: newId(), name: '', dosage: '', frequencyType: 'recurring',
+    frequencyCount: '', frequencyUnit: 'day', startDate: '', endDate: '', date: '', notes: '',
+  });
+  const [draft, setDraft] = useState(null);
+  const [editId, setEditId] = useState(null);
+
+  const upd = (k, v) => setDraft(d => ({ ...d, [k]: v }));
+
+  function openAdd() { setDraft(blank()); setEditId(null); }
+  function openEdit(item) { setDraft({ ...item }); setEditId(item.id); }
+
+  function save() {
+    if (!draft?.name?.trim()) return;
+    if (editId) {
+      onChange(items.map(i => i.id === editId ? draft : i));
+    } else {
+      onChange([...items, draft]);
+    }
+    setDraft(null); setEditId(null);
+  }
+
+  function remove(id) { onChange(items.filter(i => i.id !== id)); }
+
+  function freqLabel(item) {
+    if (item.frequencyType === 'one-time') return 'Once';
+    if (item.frequencyType === 'as-needed') return 'As needed';
+    const unit = { day: '/day', week: '/wk', month: '/mo' }[item.frequencyUnit] || '';
+    return item.frequencyCount ? `${item.frequencyCount}×${unit}` : 'Recurring';
+  }
+
+  const fmtDate = d => {
+    if (!d) return null;
+    const [y, m] = d.split('-');
+    return `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]} ${y}`;
+  };
+
+  return (
+    <div className="mb-5">
+      <div className="flex items-center justify-between mb-1.5">
+        <div>
+          <span className="text-sm font-medium text-gray-700">Medications</span>
+          {items.length > 0 && <span className="ml-2 text-xs text-gray-400">{items.length} medication{items.length === 1 ? '' : 's'}</span>}
+        </div>
+        {!draft && (
+          <button onClick={openAdd}
+            className="text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors">
+            + Add
+          </button>
+        )}
+      </div>
+      <p className="text-xs text-gray-400 mb-2 leading-relaxed">Include chemo drugs, supportive care, and any other medications.</p>
+
+      {/* Add / Edit form */}
+      {draft && (
+        <div className="border border-blue-200 bg-blue-50 rounded-lg p-3 mb-2 space-y-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <p className="text-xs text-gray-600 font-medium mb-1">Medication name *</p>
+              <input value={draft.name} onChange={e => upd('name', e.target.value)}
+                placeholder="e.g. Vincristine, Ondansetron…"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-600 font-medium mb-1">Dosage</p>
+              <input value={draft.dosage} onChange={e => upd('dosage', e.target.value)}
+                placeholder="e.g. 1.5 mg/m², 8 mg"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            </div>
+          </div>
+
+          {/* Frequency type toggle */}
+          <div className="flex flex-wrap gap-3">
+            {[{v:'recurring',l:'Recurring'},{v:'one-time',l:'One-time'},{v:'as-needed',l:'As needed'}].map(({v,l}) => (
+              <label key={v} className="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" name={`freqType-${draft.id}`} checked={draft.frequencyType === v}
+                  onChange={() => upd('frequencyType', v)} className="accent-blue-600" />
+                <span className="text-sm text-gray-700">{l}</span>
+              </label>
+            ))}
+          </div>
+
+          {draft.frequencyType === 'recurring' ? (
+            <>
+              <div className="flex items-center gap-2">
+                <input value={draft.frequencyCount} onChange={e => upd('frequencyCount', e.target.value)}
+                  placeholder="e.g. 2" type="number" min="1"
+                  className="w-20 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                <span className="text-sm text-gray-600">times per</span>
+                <select value={draft.frequencyUnit} onChange={e => upd('frequencyUnit', e.target.value)}
+                  className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                  <option value="day">Day</option>
+                  <option value="week">Week</option>
+                  <option value="month">Month</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Start date</p>
+                  <input type="date" value={draft.startDate} onChange={e => upd('startDate', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">End date <span className="text-gray-400">(blank = ongoing)</span></p>
+                  <input type="date" value={draft.endDate} onChange={e => upd('endDate', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                </div>
+              </div>
+            </>
+          ) : draft.frequencyType === 'one-time' ? (
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Date administered</p>
+              <input type="date" value={draft.date} onChange={e => upd('date', e.target.value)}
+                className="w-full sm:w-48 border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            </div>
+          ) : (
+            /* as-needed: just optional start/end to track active prescription window */
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Start date <span className="text-gray-400">(optional)</span></p>
+                <input type="date" value={draft.startDate} onChange={e => upd('startDate', e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 mb-1">End date <span className="text-gray-400">(optional)</span></p>
+                <input type="date" value={draft.endDate} onChange={e => upd('endDate', e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+              </div>
+            </div>
+          )}
+
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Notes <span className="text-gray-400">(optional)</span></p>
+            <input value={draft.notes} onChange={e => upd('notes', e.target.value)}
+              placeholder="e.g. Discontinued due to side effects, replaced by…"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <button onClick={save}
+              className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors">
+              {editId ? 'Update' : 'Add'}
+            </button>
+            <button onClick={() => { setDraft(null); setEditId(null); }}
+              className="px-3 py-1.5 text-gray-600 text-xs font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Medication rows */}
+      {items.length > 0 && (
+        <div className="border border-gray-200 rounded-lg overflow-hidden divide-y divide-gray-100 max-h-80 overflow-y-auto">
+          {items.map(item => {
+            const dateDisplay = item.frequencyType === 'one-time'
+              ? (fmtDate(item.date) || '—')
+              : `${fmtDate(item.startDate) || '?'} → ${fmtDate(item.endDate) || 'ongoing'}`;
+            return (
+              <div key={item.id} className="px-3 py-2.5 bg-white hover:bg-gray-50 group">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium text-sm text-gray-800 truncate">{item.name}</span>
+                  {/* always visible on touch, hover-only on pointer devices */}
+                  <div className="flex gap-2 shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition">
+                    <button onClick={() => openEdit(item)} title="Edit" className="text-gray-400 hover:text-blue-500">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button onClick={() => remove(item.id)} title="Remove" className="text-gray-400 hover:text-red-500">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                  {item.dosage && <span className="text-xs text-gray-500">{item.dosage}</span>}
+                  <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full whitespace-nowrap">{freqLabel(item)}</span>
+                  <span className="text-xs text-gray-400 whitespace-nowrap">{dateDisplay}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {items.length === 0 && !draft && (
+        <p className="text-xs text-gray-400 italic">None added yet.</p>
+      )}
+    </div>
+  );
+}
+
+// ── AllergyTable — medication + reaction pairs ────────────────────────────────
+function AllergyTable({ items = [], onChange }) {
+  const blank = () => ({ id: newId(), medication: '', reaction: '' });
+
+  function addRow() { onChange([...items, blank()]); }
+  function remove(id) { onChange(items.filter(i => i.id !== id)); }
+  function updRow(id, field, value) {
+    onChange(items.map(i => i.id === id ? { ...i, [field]: value } : i));
+  }
+
+  return (
+    <div className="mb-5">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-sm font-medium text-gray-700">Medication Allergies &amp; Intolerances</span>
+        <button onClick={addRow}
+          className="text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors">
+          + Add
+        </button>
+      </div>
+      {items.length === 0 ? (
+        <p className="text-xs text-gray-400 italic">None added — or enter NKDA if no known drug allergies.</p>
+      ) : (
+        <div className="space-y-2">
+          {items.map(item => (
+            <div key={item.id} className="flex items-center gap-2">
+              <input
+                value={item.medication} onChange={e => updRow(item.id, 'medication', e.target.value)}
+                placeholder="Medication"
+                className="w-2/5 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              <input
+                value={item.reaction} onChange={e => updRow(item.id, 'reaction', e.target.value)}
+                placeholder="Allergy / intolerance"
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              <button onClick={() => remove(item.id)} title="Remove"
+                className="shrink-0 text-gray-300 hover:text-red-500 transition">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── SupplementTable — vitamins, minerals, herbal supplements ─────────────────
+function SupplementTable({ items = [], onChange }) {
+  const blank = () => ({ id: newId(), name: '', dosage: '', frequency: '', notes: '' });
+  const [draft, setDraft] = useState(null);
+  const [editId, setEditId] = useState(null);
+  const upd = (k, v) => setDraft(d => ({ ...d, [k]: v }));
+
+  function openAdd()  { setDraft(blank()); setEditId(null); }
+  function openEdit(item) { setDraft({ ...item }); setEditId(item.id); }
+  function save() {
+    if (!draft?.name?.trim()) return;
+    if (editId) onChange(items.map(i => i.id === editId ? draft : i));
+    else        onChange([...items, draft]);
+    setDraft(null); setEditId(null);
+  }
+  function remove(id) { onChange(items.filter(i => i.id !== id)); }
+
+  return (
+    <div className="mb-5">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-sm font-medium text-gray-700">Supplements</span>
+        {!draft && (
+          <button onClick={openAdd}
+            className="text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors">
+            + Add
+          </button>
+        )}
+      </div>
+      <p className="text-xs text-gray-400 mb-2 leading-relaxed">Vitamins, minerals, herbal supplements, or other non-prescription items.</p>
+
+      {draft && (
+        <div className="border border-blue-200 rounded-lg p-3 bg-blue-50/40 mb-3 space-y-2">
+          <input value={draft.name} onChange={e => upd('name', e.target.value)}
+            placeholder="Supplement name *" autoFocus
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <div className="flex gap-2">
+            <input value={draft.dosage} onChange={e => upd('dosage', e.target.value)}
+              placeholder="Dose (e.g. 500 mg)"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            <input value={draft.frequency} onChange={e => upd('frequency', e.target.value)}
+              placeholder="Frequency (e.g. daily)"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          </div>
+          <input value={draft.notes} onChange={e => upd('notes', e.target.value)}
+            placeholder="Notes (optional)"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          <div className="flex gap-2 justify-end">
+            <button onClick={() => { setDraft(null); setEditId(null); }}
+              className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 transition">Cancel</button>
+            <button onClick={save}
+              className="text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition">
+              {editId ? 'Save' : 'Add'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {items.length === 0 && !draft ? (
+        <p className="text-xs text-gray-400 italic">None added yet.</p>
+      ) : (
+        <div className="border border-gray-200 rounded-lg overflow-hidden divide-y divide-gray-100">
+          {items.map(item => (
+            <div key={item.id} className="group flex items-start gap-2 px-3 py-2.5 hover:bg-gray-50 transition">
+              <div className="flex-1 min-w-0">
+                <span className="text-sm font-medium text-gray-800">{item.name}</span>
+                {(item.dosage || item.frequency) && (
+                  <span className="text-xs text-gray-500 ml-2">
+                    {[item.dosage, item.frequency].filter(Boolean).join(' · ')}
+                  </span>
+                )}
+                {item.notes && <p className="text-xs text-gray-400 mt-0.5 truncate">{item.notes}</p>}
+              </div>
+              <div className="flex gap-1 flex-shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                <button onClick={() => openEdit(item)} title="Edit"
+                  className="text-gray-400 hover:text-blue-600 transition">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button onClick={() => remove(item.id)} title="Remove"
+                  className="text-gray-400 hover:text-red-500 transition">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Shared UI primitives ───────────────────────────────────────────────────────
 function Field({ label, hint, children }) {
@@ -481,53 +953,12 @@ function RelapsePanel({ form, upd, tog }) {
 function SymptomsPanel({ form, upd }) {
   return (
     <>
-      <SectionTitle title="Symptoms & Medications" subtitle="Current symptoms, side effects, and medications." />
-
-      <Field label="Symptoms" hint="Describe current symptoms.">
-        <TextArea value={form.currentSymptoms} onChange={v => upd('currentSymptoms', v)}
-          placeholder="e.g. Fatigue, pain at tumor site, shortness of breath, decreased appetite..." rows={3} />
-      </Field>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 mb-5">
-        <Field label="Symptoms — Start Date">
-          <TextInput value={form.symptomsStartDate} onChange={v => upd('symptomsStartDate', v)} type="date" />
-        </Field>
-        <Field label="Symptoms — End Date" hint="Leave blank if ongoing.">
-          <TextInput value={form.symptomsEndDate} onChange={v => upd('symptomsEndDate', v)} type="date" />
-        </Field>
-      </div>
-
-      <Field label="Side Effects from Treatment"
-        hint="Side effects from chemotherapy, radiation, or surgery.">
-        <TextArea value={form.currentSideEffects} onChange={v => upd('currentSideEffects', v)}
-          placeholder="e.g. Nausea, mucositis, peripheral neuropathy, hearing loss, low counts..." rows={3} />
-      </Field>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 mb-5">
-        <Field label="Side Effects — Start Date">
-          <TextInput value={form.sideEffectsStartDate} onChange={v => upd('sideEffectsStartDate', v)} type="date" />
-        </Field>
-        <Field label="Side Effects — End Date" hint="Leave blank if ongoing.">
-          <TextInput value={form.sideEffectsEndDate} onChange={v => upd('sideEffectsEndDate', v)} type="date" />
-        </Field>
-      </div>
-
-      <Field label="Current Medications"
-        hint="Include chemo drugs, supportive care, and any other medications.">
-        <TextArea value={form.currentMedications} onChange={v => upd('currentMedications', v)}
-          placeholder="e.g. Vincristine, Doxorubicin, Ondansetron (Zofran), G-CSF (Neupogen), Mesna..." rows={3} />
-      </Field>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 mb-5">
-        <Field label="Medications — Start Date">
-          <TextInput value={form.medicationsStartDate} onChange={v => upd('medicationsStartDate', v)} type="date" />
-        </Field>
-        <Field label="Medications — End Date" hint="Leave blank if ongoing.">
-          <TextInput value={form.medicationsEndDate} onChange={v => upd('medicationsEndDate', v)} type="date" />
-        </Field>
-      </div>
-
-      <Field label="Medication Allergies or Intolerances">
-        <TextInput value={form.medicationAllergies} onChange={v => upd('medicationAllergies', v)}
-          placeholder="e.g. Penicillin allergy; NKDA (no known drug allergies)" />
-      </Field>
+      <SymptomTable
+        label="Symptoms & Side Effects"
+        hint="Track anything you're experiencing — cancer symptoms, chemo side effects, post-surgery issues, etc."
+        items={form.symptoms}
+        onChange={v => upd('symptoms', v)}
+      />
 
       <Field label="Other Significant Health Conditions / Comorbidities">
         <TextArea value={form.comorbidities} onChange={v => upd('comorbidities', v)}
@@ -536,6 +967,55 @@ function SymptomsPanel({ form, upd }) {
     </>
   );
 }
+
+const MED_TABS = [
+  { id: 'medications', label: 'Medications' },
+  { id: 'allergies',   label: 'Allergies' },
+  { id: 'supplements', label: 'Supplements' },
+];
+
+function MedicationsPanel({ form, upd }) {
+  const [medTab, setMedTab] = useState('medications');
+  return (
+    <>
+      <SectionTitle title="Medications" subtitle="Manage current medications, allergies, and supplements." />
+
+      {/* Sub-tab bar — overflow-x-auto prevents crush on narrow screens */}
+      <div className="flex gap-1 mb-5 border-b border-gray-200 overflow-x-auto -mx-0.5">
+        {MED_TABS.map(t => (
+          <button key={t.id} onClick={() => setMedTab(t.id)}
+            className={`flex-shrink-0 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+              medTab === t.id
+                ? 'text-blue-700 bg-blue-50 border border-gray-200 border-b-white -mb-px'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {medTab === 'medications' && (
+        <MedicationTable
+          items={form.medications}
+          onChange={v => upd('medications', v)}
+        />
+      )}
+      {medTab === 'allergies' && (
+        <AllergyTable
+          items={form.medicationAllergies}
+          onChange={v => upd('medicationAllergies', v)}
+        />
+      )}
+      {medTab === 'supplements' && (
+        <SupplementTable
+          items={form.supplements || []}
+          onChange={v => upd('supplements', v)}
+        />
+      )}
+    </>
+  );
+}
+
 
 function CareTeamPanel({ form, upd }) {
   return (
@@ -612,7 +1092,8 @@ const SECTION_FIELDS = {
   treatment:  ['treatmentPhase','chemoRegimens','cyclesCompleted','hadSurgery','hadRadiation','hadSCT'],
   status:     ['currentStatus','chemoResponse','lastScanResult','lastScanDate','performanceStatus','ctdnaTested'],
   relapse:    ['hasRelapsed','relapseDate','relapseSites','postRelapseTreatments'],
-  symptoms:   ['currentSymptoms','symptomsStartDate','currentSideEffects','sideEffectsStartDate','currentMedications','medicationsStartDate','medicationAllergies'],
+  symptoms:    ['symptoms', 'comorbidities'],
+  medications:  ['medications','medicationAllergies','supplements'],
   careteam:   ['treatingInstitution','oncologistName','inClinicalTrial','willingToTravel','insuranceType'],
   additional: ['mainConcerns','additionalContext'],
 };
@@ -626,8 +1107,31 @@ function sectionHasData(sectionId, form) {
 }
 
 // ── Main Questionnaire component ───────────────────────────────────────────────
+function migrateProfile(p) {
+  const f = { ...p };
+  const migratedSymptoms = [];
+  if (f.currentSymptoms) migratedSymptoms.push({ id: newId(), description: f.currentSymptoms, persistence: 'consistent', startDate: f.symptomsStartDate || '', endDate: f.symptomsEndDate || '' });
+  if (f.currentSideEffects) migratedSymptoms.push({ id: newId(), description: f.currentSideEffects, persistence: 'consistent', startDate: f.sideEffectsStartDate || '', endDate: f.sideEffectsEndDate || '' });
+  if (!Array.isArray(f.symptoms)) {
+    f.symptoms = migratedSymptoms;
+  } else if (Array.isArray(f.sideEffects) && f.sideEffects.length > 0) {
+    // merge any previously saved sideEffects entries into symptoms
+    f.symptoms = [...f.symptoms, ...f.sideEffects];
+  }
+  if (!Array.isArray(f.medicationAllergies)) {
+    f.medicationAllergies = f.medicationAllergies
+      ? [{ id: newId(), medication: '', reaction: f.medicationAllergies }]
+      : [];
+  }
+  if (!Array.isArray(f.medications)) {
+    f.medications = f.currentMedications ? [{ id: newId(), name: f.currentMedications, dosage: '', frequencyType: 'recurring', frequencyCount: '', frequencyUnit: 'day', startDate: f.medicationsStartDate || '', endDate: f.medicationsEndDate || '', date: '', notes: '' }] : [];
+  }
+  if (!Array.isArray(f.supplements)) f.supplements = [];
+  return f;
+}
+
 export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }) {
-  const [form, setForm]         = useState({ ...profile });
+  const [form, setForm]         = useState(() => migrateProfile(profile));
   const [active, setActive]     = useState('basics');
   const [wizardStep, setWizardStep] = useState(0); // only used when isFirstVisit
 
@@ -639,7 +1143,7 @@ export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }
 
   const panels = { basics: BasicsPanel, diagnosis: DiagnosisPanel, treatment: TreatmentPanel,
     status: StatusPanel, relapse: RelapsePanel, symptoms: SymptomsPanel,
-    careteam: CareTeamPanel, additional: AdditionalPanel };
+    medications: MedicationsPanel, careteam: CareTeamPanel, additional: AdditionalPanel };
 
   // In wizard mode the active section tracks the wizard step
   const effectiveActive = isFirstVisit ? SECTIONS[wizardStep].id : active;
@@ -660,7 +1164,7 @@ export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="bg-white sm:rounded-2xl w-full sm:max-w-4xl h-[95dvh] sm:max-h-[92vh] flex flex-col shadow-2xl rounded-t-2xl">
+      <div className="bg-white sm:rounded-2xl w-full sm:max-w-5xl h-[95dvh] sm:max-h-[92vh] flex flex-col shadow-2xl rounded-t-2xl">
 
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 flex items-start justify-between flex-shrink-0">

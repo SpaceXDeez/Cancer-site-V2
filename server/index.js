@@ -22,6 +22,9 @@ const app  = express();
 const PORT = process.env.PORT || 3001;
 const isProd = process.env.NODE_ENV === 'production';
 
+// Trust Railway/proxy X-Forwarded-For headers for accurate rate limiting
+app.set('trust proxy', 1);
+
 // ── Security headers ──────────────────────────────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: isProd ? undefined : false, // relax CSP in dev for Vite HMR
@@ -177,22 +180,76 @@ function buildPatientContext(profile) {
     }
     add('Treatments After Relapse', profile.postRelapseTreatments);
   }
-  if (profile.currentSymptoms) {
-    let symptomLine = `Current Symptoms: ${profile.currentSymptoms}`;
-    if (profile.symptomsStartDate) symptomLine += ` (from ${profile.symptomsStartDate}${profile.symptomsEndDate ? ` to ${profile.symptomsEndDate}` : ' — ongoing'})`;
-    lines.push(symptomLine);
+  // Symptoms & side effects — new array format or legacy strings
+  const symptomEntries = Array.isArray(profile.symptoms) ? profile.symptoms : [];
+  const sideEffectEntries = Array.isArray(profile.sideEffects) ? profile.sideEffects : [];
+  const allSymptoms = [...symptomEntries, ...sideEffectEntries];
+  if (allSymptoms.length > 0) {
+    lines.push('Symptoms & Side Effects:');
+    allSymptoms.forEach(s => {
+      let line = `  - ${s.description}`;
+      if (s.persistence) line += ` (${s.persistence})`;
+      if (s.startDate) line += ` — from ${s.startDate}`;
+      if (s.endDate) line += ` to ${s.endDate}`;
+      else if (s.startDate) line += ` (ongoing)`;
+      lines.push(line);
+    });
+  } else {
+    // Legacy string format
+    if (profile.currentSymptoms) {
+      let line = `Current Symptoms: ${profile.currentSymptoms}`;
+      if (profile.symptomsStartDate) line += ` (from ${profile.symptomsStartDate}${profile.symptomsEndDate ? ` to ${profile.symptomsEndDate}` : ' — ongoing'})`;
+      lines.push(line);
+    }
+    if (profile.currentSideEffects) {
+      let line = `Current Side Effects: ${profile.currentSideEffects}`;
+      if (profile.sideEffectsStartDate) line += ` (from ${profile.sideEffectsStartDate}${profile.sideEffectsEndDate ? ` to ${profile.sideEffectsEndDate}` : ' — ongoing'})`;
+      lines.push(line);
+    }
   }
-  if (profile.currentSideEffects) {
-    let seLine = `Current Side Effects: ${profile.currentSideEffects}`;
-    if (profile.sideEffectsStartDate) seLine += ` (from ${profile.sideEffectsStartDate}${profile.sideEffectsEndDate ? ` to ${profile.sideEffectsEndDate}` : ' — ongoing'})`;
-    lines.push(seLine);
-  }
-  if (profile.currentMedications) {
+  // Medications — new array format or legacy string
+  if (Array.isArray(profile.medications) && profile.medications.length > 0) {
+    lines.push('Medications:');
+    profile.medications.forEach(m => {
+      let line = `  - ${m.name}`;
+      if (m.dosage) line += ` ${m.dosage}`;
+      if (m.frequencyType === 'one-time') {
+        line += ` — one-time${m.date ? ` on ${m.date}` : ''}`;
+      } else if (m.frequencyType === 'as-needed') {
+        line += ` — as needed (PRN)`;
+        if (m.startDate) line += ` from ${m.startDate}`;
+        if (m.endDate) line += ` to ${m.endDate}`;
+      } else {
+        if (m.frequencyCount && m.frequencyUnit) line += ` — ${m.frequencyCount}x/${m.frequencyUnit}`;
+        if (m.startDate) line += ` from ${m.startDate}`;
+        if (m.endDate) line += ` to ${m.endDate}`;
+        else if (m.startDate) line += ` (ongoing)`;
+      }
+      if (m.notes) line += ` — ${m.notes}`;
+      lines.push(line);
+    });
+  } else if (profile.currentMedications) {
     let medLine = `Current Medications: ${profile.currentMedications}`;
     if (profile.medicationsStartDate) medLine += ` (from ${profile.medicationsStartDate}${profile.medicationsEndDate ? ` to ${profile.medicationsEndDate}` : ' — ongoing'})`;
     lines.push(medLine);
   }
-  add('Medication Allergies', profile.medicationAllergies);
+  if (Array.isArray(profile.medicationAllergies) && profile.medicationAllergies.length > 0) {
+    const allergyLines = profile.medicationAllergies
+      .map(a => a.medication ? `${a.medication}: ${a.reaction}` : a.reaction)
+      .filter(Boolean).join(', ');
+    if (allergyLines) add('Medication Allergies', allergyLines);
+  } else if (typeof profile.medicationAllergies === 'string') {
+    add('Medication Allergies', profile.medicationAllergies);
+  }
+  if (Array.isArray(profile.supplements) && profile.supplements.length > 0) {
+    const suppLines = profile.supplements.map(s => {
+      let line = s.name;
+      if (s.dosage)    line += ` ${s.dosage}`;
+      if (s.frequency) line += ` (${s.frequency})`;
+      return line;
+    }).join(', ');
+    add('Supplements', suppLines);
+  }
   add('Other Health Conditions', profile.comorbidities);
   add('Treating Institution', profile.treatingInstitution);
   add('Oncologist', profile.oncologistName);
@@ -269,7 +326,7 @@ app.post('/api/chat', requireAuth, chatLimiter, async (req, res) => {
 
     const profileRow = await db.getProfile(req.user.userId);
     const profile    = profileRow ? JSON.parse(profileRow.data) : {};
-    const docs       = await db.getUserDocuments(req.user.userId);
+    const docs       = await db.getUserDocumentsWithText(req.user.userId);
     const history    = await db.getMessages(chatId);
     const userDisplayName = profile?._settings?.displayName?.trim() || null;
 
@@ -408,11 +465,64 @@ app.post('/api/upload', requireAuth, dailyUploadLimiter, uploadLimiter, (req, re
     }
 
     const truncated = truncate(text);
-    await db.saveDocument(req.user.userId, originalname, truncated);
-    res.json({ text: truncated, filename: originalname });
+
+    // Run AI analysis: summary + medication extraction (fire in background-ish but await for response)
+    let aiSummary = '';
+    try {
+      const analysis = await anthropic.messages.create({
+        model: 'claude-opus-4-5',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: `Analyze this medical document and return JSON only — no other text.
+
+Fields:
+- "summary": 2-3 sentence plain-language summary of the document's key content and findings.
+- "medications": array of any medications, chemo drugs, or supplements mentioned, each as { name, dosage, frequency, notes }. Empty array if none.
+
+Document:
+${truncated.slice(0, 8000)}`,
+        }],
+      });
+      const raw = analysis.content[0].text.trim().replace(/^```json\s*/,'').replace(/```\s*$/,'');
+      JSON.parse(raw); // validate
+      aiSummary = raw;
+    } catch { /* analysis is best-effort */ }
+
+    await db.saveDocument(req.user.userId, originalname, truncated, aiSummary);
+    res.json({ text: truncated, filename: originalname, aiSummary: aiSummary ? JSON.parse(aiSummary) : null });
   } catch (err) {
     console.error('Upload error:', err.message);
     res.status(500).json({ error: 'Failed to process file. Please try again.' });
+  }
+});
+
+// ── Documents — list / get / delete ──────────────────────────────────────────
+app.get('/api/documents', requireAuth, async (req, res) => {
+  try {
+    const docs = await db.getUserDocuments(req.user.userId);
+    res.json({ documents: docs });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch documents.' });
+  }
+});
+
+app.get('/api/documents/:id', requireAuth, async (req, res) => {
+  try {
+    const doc = await db.getDocumentById(req.params.id, req.user.userId);
+    if (!doc) return res.status(404).json({ error: 'Not found.' });
+    res.json({ document: doc });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch document.' });
+  }
+});
+
+app.delete('/api/documents/:id', requireAuth, async (req, res) => {
+  try {
+    await db.deleteDocument(req.params.id, req.user.userId);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete document.' });
   }
 });
 

@@ -215,6 +215,10 @@ function buildPatientContext(profile) {
       if (m.dosage) line += ` ${m.dosage}`;
       if (m.frequencyType === 'one-time') {
         line += ` — one-time${m.date ? ` on ${m.date}` : ''}`;
+      } else if (m.frequencyType === 'as-needed') {
+        line += ` — as needed (PRN)`;
+        if (m.startDate) line += ` from ${m.startDate}`;
+        if (m.endDate) line += ` to ${m.endDate}`;
       } else {
         if (m.frequencyCount && m.frequencyUnit) line += ` — ${m.frequencyCount}x/${m.frequencyUnit}`;
         if (m.startDate) line += ` from ${m.startDate}`;
@@ -236,6 +240,15 @@ function buildPatientContext(profile) {
     if (allergyLines) add('Medication Allergies', allergyLines);
   } else if (typeof profile.medicationAllergies === 'string') {
     add('Medication Allergies', profile.medicationAllergies);
+  }
+  if (Array.isArray(profile.supplements) && profile.supplements.length > 0) {
+    const suppLines = profile.supplements.map(s => {
+      let line = s.name;
+      if (s.dosage)    line += ` ${s.dosage}`;
+      if (s.frequency) line += ` (${s.frequency})`;
+      return line;
+    }).join(', ');
+    add('Supplements', suppLines);
   }
   add('Other Health Conditions', profile.comorbidities);
   add('Treating Institution', profile.treatingInstitution);

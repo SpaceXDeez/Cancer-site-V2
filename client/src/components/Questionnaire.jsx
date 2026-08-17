@@ -73,17 +73,18 @@ function SymptomTable({ label, hint, items = [], onChange }) {
     <div className="mb-5">
       <div className="flex items-center justify-between mb-1.5">
         <div>
-          <span className="text-sm font-medium text-gray-700">{label}</span>
-          {items.length > 0 && <span className="ml-2 text-xs text-gray-400">{items.length} entr{items.length === 1 ? 'y' : 'ies'}</span>}
+          {label && <span className="text-sm font-medium text-gray-700">{label}</span>}
+          {label && items.length > 0 && <span className="ml-2 text-xs text-gray-400">{items.length} entr{items.length === 1 ? 'y' : 'ies'}</span>}
+          {!label && hint && <p className="text-xs text-gray-400 leading-relaxed">{hint}</p>}
         </div>
         {!draft && (
           <button onClick={openAdd}
-            className="text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors">
+            className="text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors flex-shrink-0">
             + Add
           </button>
         )}
       </div>
-      {hint && <p className="text-xs text-gray-400 mb-2 leading-relaxed">{hint}</p>}
+      {label && hint && <p className="text-xs text-gray-400 mb-2 leading-relaxed">{hint}</p>}
 
       {/* Add / Edit form */}
       {draft && (

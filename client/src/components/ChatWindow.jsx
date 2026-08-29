@@ -211,14 +211,13 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
         ) : isNew ? (
           /* Centered hero — shown before any message is sent */
           <div className="flex flex-col items-center gap-3 text-center">
-          <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-lg">
-            <img src="/images/boy-bell-circle.png" alt="" className="w-full h-full object-cover" />
-          </div>
-            <p className="text-xl font-bold text-brand-teal-dark max-w-sm leading-snug">
-              Bell Guide &mdash; AI support for Ewing&apos;s sarcoma patients and families
-            </p>
-            <p className="text-sm text-[#5a7a8a] max-w-xs leading-relaxed">
-              Ask about treatments, side effects, clinical trials, survivorship, and more.
+            <img
+              src="/images/wordmark-wide.png"
+              alt="Bell Guide"
+              className="h-14 sm:h-16 w-auto"
+            />
+            <p className="text-base text-[#5a7a8a] max-w-xs leading-relaxed">
+              AI support for Ewing&apos;s sarcoma patients and families
             </p>
           </div>
         ) : (
@@ -376,6 +375,14 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
                 </button>
               ))}
             </div>
+          </div>
+          {/* Tagline centered at the bottom of the new-chat view */}
+          <div className="flex justify-center pb-2">
+            <img
+              src="/images/tagline.png"
+              alt="Knowledge and support to the bell and beyond"
+              className="h-6 w-auto opacity-60"
+            />
           </div>
         </div>
       )}

@@ -63,7 +63,7 @@ export default function HomePage({ isLoggedIn, user, onLoginClick, onStartChat }
         <img
           src="/images/banner.jpg"
           alt="Bell Guide — Every question. Every step. A guide along your cancer journey."
-          className="w-full object-cover"
+          className="w-full object-cover max-h-[45vh] sm:max-h-[55vh]"
         />
         <div className="text-center py-8 px-4">
           <img

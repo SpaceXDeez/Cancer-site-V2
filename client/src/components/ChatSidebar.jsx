@@ -40,17 +40,9 @@ export default function ChatSidebar({
   return (
     <aside className={`w-64 bg-brand-teal-dark flex flex-col h-full flex-shrink-0 fixed inset-y-0 left-0 z-50 md:relative md:z-auto transition-transform duration-300 ease-in-out md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       {/* Brand */}
-      <div className="px-4 py-3.5 border-b border-white/10 relative">
-        <div className="flex items-center gap-2.5">
-          <img
-            src="/images/boy-bell-circle.png"
-            alt=""
-            className="w-9 h-9 rounded-full object-cover flex-shrink-0 opacity-90"
-          />
-          <div className="min-w-0">
-            <img src="/images/wordmark-wide.png" alt="Bell Guide" className="h-6 w-auto brightness-0 invert opacity-90" />
-            <p className="text-[#94c9e0] text-[10px] leading-tight mt-0.5">AI Support Assistant</p>
-          </div>
+      <div className="px-4 py-3 border-b border-white/10 relative">
+        <div className="flex items-center gap-2">
+          <img src="/images/wordmark-wide.png" alt="Bell Guide" className="h-7 w-auto brightness-0 invert opacity-90" />
         </div>
         <button
           onClick={onCloseSidebar}
@@ -260,6 +252,14 @@ export default function ChatSidebar({
             )}
           </button>
         )}
+        {/* Brand medallion at the very bottom of the sidebar */}
+        <div className="pt-2 flex justify-center">
+          <img
+            src="/images/boy-bell-circle.png"
+            alt=""
+            className="w-20 h-20 rounded-full object-cover opacity-70"
+          />
+        </div>
       </div>
     </aside>
   );

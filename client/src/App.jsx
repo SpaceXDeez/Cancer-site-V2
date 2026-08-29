@@ -66,7 +66,7 @@ export default function App() {
       }
       if (loadedChats.length > 0) {
         setCurrentId(loadedChats[0].id);
-        setView('chat');
+        // stay on home page; user navigates to chat themselves
       }
     }).catch(console.error)
       .finally(() => setAppLoading(false));

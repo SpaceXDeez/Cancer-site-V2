@@ -39,14 +39,11 @@ export default function ChatSidebar({
 
   return (
     <aside className={`w-64 bg-brand-teal-dark flex flex-col h-full flex-shrink-0 fixed inset-y-0 left-0 z-50 md:relative md:z-auto transition-transform duration-300 ease-in-out md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-      {/* Brand */}
-      <div className="px-4 py-3 border-b border-white/10 relative">
-        <div className="flex items-center gap-2">
-          <img src="/images/wordmark-wide.png" alt="Bell Guide" className="h-7 w-auto brightness-0 invert opacity-90" />
-        </div>
+      {/* Mobile close button — only shown on small screens */}
+      <div className="md:hidden px-4 py-2 flex justify-end border-b border-white/10">
         <button
           onClick={onCloseSidebar}
-          className="md:hidden absolute top-3 right-3 text-[#94c9e0] hover:text-white p-1.5 rounded-lg transition-colors"
+          className="text-[#94c9e0] hover:text-white p-1.5 rounded-lg transition-colors"
           aria-label="Close menu"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -257,7 +254,7 @@ export default function ChatSidebar({
           <img
             src="/images/boy-bell-circle.png"
             alt=""
-            className="w-20 h-20 rounded-full object-cover opacity-70"
+            className="w-20 h-20 object-contain opacity-70"
           />
         </div>
       </div>

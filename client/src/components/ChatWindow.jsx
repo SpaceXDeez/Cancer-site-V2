@@ -214,7 +214,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
             <img
               src="/images/wordmark-wide.png"
               alt="Bell Guide"
-              className="h-14 sm:h-16 w-auto"
+              className="h-28 sm:h-32 w-auto"
             />
             <p className="text-base text-[#5a7a8a] max-w-xs leading-relaxed">
               AI support for Ewing&apos;s sarcoma patients and families

@@ -251,7 +251,7 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
                   <button
                     onClick={savePersonalization}
                     disabled={saving}
-                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+                    className="px-5 py-2 bg-brand-teal hover:bg-brand-teal-dark disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
                   >
                     {saving ? 'Saving…' : 'Save'}
                   </button>
@@ -282,7 +282,7 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
                           value={s.id}
                           checked={aiStyle === s.id}
                           onChange={() => setAiStyle(s.id)}
-                          className="mt-0.5 accent-blue-600"
+                          className="mt-0.5 accent-brand-teal"
                         />
                         <div>
                           <p className="text-sm font-medium text-gray-900 leading-tight">{s.label}</p>
@@ -311,7 +311,7 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
                   <button
                     onClick={savePersonalization}
                     disabled={saving}
-                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+                    className="px-5 py-2 bg-brand-teal hover:bg-brand-teal-dark disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
                   >
                     {saving ? 'Saving…' : 'Save'}
                   </button>
@@ -376,7 +376,7 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
                     <button
                       type="submit"
                       disabled={pwLoading}
-                      className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="px-5 py-2 bg-brand-teal hover:bg-brand-teal-dark disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
                     >
                       {pwLoading ? 'Updating…' : 'Update password'}
                     </button>
@@ -477,7 +477,7 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
 
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">DR</div>
+                    <img src="/images/boy-bell-circle.png" alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                     <div>
                       <p className="text-sm font-semibold text-gray-900">Dylan Rossi</p>
                       <p className="text-xs text-gray-500">Creator &amp; Ewing's sarcoma survivor</p>

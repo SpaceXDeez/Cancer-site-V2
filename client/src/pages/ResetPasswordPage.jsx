@@ -44,7 +44,7 @@ export default function ResetPasswordPage({ token }) {
             <input
               type="password" value={newPw} onChange={e => setNewPw(e.target.value)}
               required autoComplete="new-password" placeholder="At least 8 characters"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent transition"
             />
           </div>
           <div>
@@ -52,19 +52,19 @@ export default function ResetPasswordPage({ token }) {
             <input
               type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)}
               required autoComplete="new-password" placeholder="••••••••"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent transition"
             />
           </div>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2.5 text-sm">{error}</div>
           )}
           <button type="submit" disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors shadow-sm">
+            className="w-full bg-brand-teal hover:bg-brand-teal-dark disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors shadow-sm">
             {loading ? 'Updating…' : 'Set new password'}
           </button>
         </form>
         <p className="text-center text-sm text-gray-500 mt-5">
-          <a href="/" className="text-blue-600 hover:text-blue-800 font-medium transition-colors">
+          <a href="/" className="text-brand-teal hover:text-brand-teal-dark font-medium transition-colors">
             ← Back to sign in
           </a>
         </p>

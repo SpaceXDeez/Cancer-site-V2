@@ -184,10 +184,11 @@ export default function App() {
 
   if (appLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-900">
+      <div className="flex h-screen items-center justify-center bg-brand-cream">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-slate-400 text-sm">Loading…</p>
+          <img src="/images/boy-bell-circle.png" alt="" className="w-20 h-20 mx-auto mb-4 opacity-80" />
+          <div className="w-6 h-6 border-2 border-brand-teal border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-brand-teal-mid text-sm">Loading…</p>
         </div>
       </div>
     );
@@ -196,7 +197,7 @@ export default function App() {
   const closeSidebar = () => setSidebarOpen(false);
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-brand-cream overflow-hidden">
       {/* Mobile backdrop */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/60 z-40 md:hidden" onClick={closeSidebar} />
@@ -206,7 +207,7 @@ export default function App() {
       {!sidebarOpen && (
         <button
           onClick={() => setSidebarOpen(true)}
-          className="fixed top-3 left-3 z-30 md:hidden bg-slate-800/95 text-white p-2.5 rounded-xl shadow-lg"
+          className="fixed top-3 left-3 z-30 md:hidden bg-brand-teal-dark text-white p-2.5 rounded-xl shadow-lg"
           aria-label="Open menu"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -280,7 +281,7 @@ export default function App() {
       )}
 
       {/* Return-user reminder banner — shown once per session */}
-      {showReturnBanner && (        <div className="fixed left-1/2 -translate-x-1/2 z-50 bg-white border border-blue-200 rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 max-w-sm w-[calc(100vw-2rem)]" style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
+      {showReturnBanner && (        <div className="fixed left-1/2 -translate-x-1/2 z-50 bg-white border border-brand-teal/30 rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 max-w-sm w-[calc(100vw-2rem)]" style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
           <svg className="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -291,7 +292,7 @@ export default function App() {
           <div className="flex gap-2 flex-shrink-0">
             <button
               onClick={() => { setShowReturnBanner(false); setShowQ(true); }}
-              className="text-xs text-blue-600 font-medium hover:text-blue-800 whitespace-nowrap"
+              className="text-xs text-brand-teal font-medium hover:text-brand-teal-dark whitespace-nowrap"
             >
               Update
             </button>
@@ -345,7 +346,7 @@ function EmptyState({ onNewChat }) {
         </p>
         <button
           onClick={onNewChat}
-          className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+          className="px-6 py-2.5 bg-brand-teal text-white rounded-xl text-sm font-medium hover:bg-brand-teal-dark transition-colors shadow-sm"
         >
           New Chat
         </button>

@@ -30,18 +30,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-brand-cream flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo / brand */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-white">Ewing's Sarcoma</h1>
-          <p className="text-blue-300 text-sm mt-1">AI Support Assistant</p>
+          <img src="/images/boy-bell-circle.png" alt="" className="w-20 h-20 rounded-full object-cover mx-auto mb-4 shadow-lg" />
+          <img src="/images/wordmark-wide.png" alt="Bell Guide" className="h-10 w-auto mx-auto mb-1" />
+          <p className="text-[#5a7a8a] text-sm mt-1">AI Support Assistant</p>
         </div>
 
         {/* Card */}
@@ -65,7 +60,7 @@ export default function LoginPage() {
                 required
                 autoComplete="email"
                 placeholder="you@example.com"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent transition"
               />
             </div>
             <div>
@@ -77,7 +72,7 @@ export default function LoginPage() {
                 required
                 autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                 placeholder={mode === 'register' ? 'At least 8 characters' : '••••••••'}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-transparent transition"
               />
             </div>
 
@@ -90,7 +85,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors shadow-sm"
+              className="w-full bg-brand-teal hover:bg-brand-teal-dark disabled:opacity-50 text-white font-medium py-2.5 rounded-lg text-sm transition-colors shadow-sm"
             >
               {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : 'Create Account'}
             </button>
@@ -100,7 +95,7 @@ export default function LoginPage() {
             {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
             <button
               onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(null); }}
-              className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+              className="text-brand-teal hover:text-brand-teal-dark font-medium transition-colors"
             >
               {mode === 'login' ? 'Sign up' : 'Sign in'}
             </button>

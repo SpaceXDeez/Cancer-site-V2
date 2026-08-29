@@ -79,7 +79,7 @@ function SymptomTable({ label, hint, items = [], onChange }) {
         </div>
         {!draft && (
           <button onClick={openAdd}
-            className="text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors flex-shrink-0">
+            className="text-xs font-medium text-brand-teal hover:text-brand-teal-dark border border-brand-teal/30 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors flex-shrink-0">
             + Add
           </button>
         )}
@@ -88,7 +88,7 @@ function SymptomTable({ label, hint, items = [], onChange }) {
 
       {/* Add / Edit form */}
       {draft && (
-        <div className="border border-blue-200 bg-blue-50 rounded-lg p-3 mb-2 space-y-2">
+        <div className="border border-brand-teal/30 bg-blue-50 rounded-lg p-3 mb-2 space-y-2">
           <textarea
             value={draft.description}
             onChange={e => upd('description', e.target.value)}
@@ -100,7 +100,7 @@ function SymptomTable({ label, hint, items = [], onChange }) {
             {['consistent', 'intermittent'].map(p => (
               <label key={p} className="flex items-center gap-1.5 cursor-pointer">
                 <input type="radio" name={`persistence-${label}`} checked={draft.persistence === p}
-                  onChange={() => upd('persistence', p)} className="accent-blue-600" />
+                  onChange={() => upd('persistence', p)} className="accent-brand-teal" />
                 <span className="text-sm text-gray-700 capitalize">{p}</span>
               </label>
             ))}
@@ -119,7 +119,7 @@ function SymptomTable({ label, hint, items = [], onChange }) {
           </div>
           <div className="flex gap-2 pt-1">
             <button onClick={save}
-              className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors">
+              className="px-3 py-1.5 bg-brand-teal text-white text-xs font-medium rounded-lg hover:bg-brand-teal-dark transition-colors">
               {editId ? 'Update' : 'Add'}
             </button>
             <button onClick={() => { setDraft(null); setEditId(null); }}
@@ -218,7 +218,7 @@ function MedicationTable({ items = [], onChange }) {
         </div>
         {!draft && (
           <button onClick={openAdd}
-            className="text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors">
+            className="text-xs font-medium text-brand-teal hover:text-brand-teal-dark border border-brand-teal/30 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors">
             + Add
           </button>
         )}
@@ -227,7 +227,7 @@ function MedicationTable({ items = [], onChange }) {
 
       {/* Add / Edit form */}
       {draft && (
-        <div className="border border-blue-200 bg-blue-50 rounded-lg p-3 mb-2 space-y-2.5">
+        <div className="border border-brand-teal/30 bg-blue-50 rounded-lg p-3 mb-2 space-y-2.5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
               <p className="text-xs text-gray-600 font-medium mb-1">Medication name *</p>
@@ -248,7 +248,7 @@ function MedicationTable({ items = [], onChange }) {
             {[{v:'recurring',l:'Recurring'},{v:'one-time',l:'One-time'},{v:'as-needed',l:'As needed'}].map(({v,l}) => (
               <label key={v} className="flex items-center gap-1.5 cursor-pointer">
                 <input type="radio" name={`freqType-${draft.id}`} checked={draft.frequencyType === v}
-                  onChange={() => upd('frequencyType', v)} className="accent-blue-600" />
+                  onChange={() => upd('frequencyType', v)} className="accent-brand-teal" />
                 <span className="text-sm text-gray-700">{l}</span>
               </label>
             ))}
@@ -312,7 +312,7 @@ function MedicationTable({ items = [], onChange }) {
 
           <div className="flex gap-2 pt-1">
             <button onClick={save}
-              className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors">
+              className="px-3 py-1.5 bg-brand-teal text-white text-xs font-medium rounded-lg hover:bg-brand-teal-dark transition-colors">
               {editId ? 'Update' : 'Add'}
             </button>
             <button onClick={() => { setDraft(null); setEditId(null); }}
@@ -380,7 +380,7 @@ function AllergyTable({ items = [], onChange }) {
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-sm font-medium text-gray-700">Medication Allergies &amp; Intolerances</span>
         <button onClick={addRow}
-          className="text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors">
+          className="text-xs font-medium text-brand-teal hover:text-brand-teal-dark border border-brand-teal/30 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors">
           + Add
         </button>
       </div>
@@ -437,7 +437,7 @@ function SupplementTable({ items = [], onChange }) {
         <span className="text-sm font-medium text-gray-700">Supplements</span>
         {!draft && (
           <button onClick={openAdd}
-            className="text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors">
+            className="text-xs font-medium text-brand-teal hover:text-brand-teal-dark border border-brand-teal/30 hover:border-blue-400 rounded-lg px-2.5 py-1 transition-colors">
             + Add
           </button>
         )}
@@ -445,7 +445,7 @@ function SupplementTable({ items = [], onChange }) {
       <p className="text-xs text-gray-400 mb-2 leading-relaxed">Vitamins, minerals, herbal supplements, or other non-prescription items.</p>
 
       {draft && (
-        <div className="border border-blue-200 rounded-lg p-3 bg-blue-50/40 mb-3 space-y-2">
+        <div className="border border-brand-teal/30 rounded-lg p-3 bg-blue-50/40 mb-3 space-y-2">
           <input value={draft.name} onChange={e => upd('name', e.target.value)}
             placeholder="Supplement name *" autoFocus
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
@@ -464,7 +464,7 @@ function SupplementTable({ items = [], onChange }) {
             <button onClick={() => { setDraft(null); setEditId(null); }}
               className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 transition">Cancel</button>
             <button onClick={save}
-              className="text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition">
+              className="text-xs font-medium text-white bg-brand-teal hover:bg-brand-teal-dark px-3 py-1.5 rounded-lg transition">
               {editId ? 'Save' : 'Add'}
             </button>
           </div>
@@ -488,7 +488,7 @@ function SupplementTable({ items = [], onChange }) {
               </div>
               <div className="flex gap-1 flex-shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                 <button onClick={() => openEdit(item)} title="Edit"
-                  className="text-gray-400 hover:text-blue-600 transition">
+                  className="text-gray-400 hover:text-brand-teal transition">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -574,7 +574,7 @@ function Radios({ options, value, onChange }) {
               value={v}
               checked={value === v}
               onChange={() => onChange(v)}
-              className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+              className="w-4 h-4 text-brand-teal border-gray-300 focus:ring-brand-teal"
             />
             <span className="text-sm text-gray-700">{l}</span>
           </label>
@@ -593,7 +593,7 @@ function Checkboxes({ options, selected = [], onToggle }) {
             type="checkbox"
             checked={selected.includes(opt)}
             onChange={() => onToggle(opt)}
-            className="mt-0.5 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
+            className="mt-0.5 w-4 h-4 text-brand-teal border-gray-300 rounded focus:ring-brand-teal flex-shrink-0"
           />
           <span className="text-sm text-gray-700 group-hover:text-gray-900 leading-snug">{opt}</span>
         </label>
@@ -1293,14 +1293,14 @@ export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }
                 {wizardStep < SECTIONS.length - 1 ? (
                   <button
                     onClick={() => setWizardStep(s => s + 1)}
-                    className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                    className="px-5 py-2 bg-brand-teal text-white text-sm font-medium rounded-lg hover:bg-brand-teal-dark transition-colors shadow-sm"
                   >
                     Next →
                   </button>
                 ) : (
                   <button
                     onClick={() => onSave(form)}
-                    className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                    className="px-5 py-2 bg-brand-teal text-white text-sm font-medium rounded-lg hover:bg-brand-teal-dark transition-colors shadow-sm"
                   >
                     Save &amp; Start Chatting
                   </button>
@@ -1320,7 +1320,7 @@ export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }
                 )}
                 <button
                   onClick={() => onSave(form)}
-                  className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                  className="px-5 py-2 bg-brand-teal text-white text-sm font-medium rounded-lg hover:bg-brand-teal-dark transition-colors shadow-sm"
                 >
                   Save Profile
                 </button>

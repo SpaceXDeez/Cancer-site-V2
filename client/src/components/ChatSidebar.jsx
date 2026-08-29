@@ -38,24 +38,23 @@ export default function ChatSidebar({
   }
 
   return (
-    <aside className={`w-64 bg-slate-900 flex flex-col h-full flex-shrink-0 fixed inset-y-0 left-0 z-50 md:relative md:z-auto transition-transform duration-300 ease-in-out md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+    <aside className={`w-64 bg-brand-teal-dark flex flex-col h-full flex-shrink-0 fixed inset-y-0 left-0 z-50 md:relative md:z-auto transition-transform duration-300 ease-in-out md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       {/* Brand */}
-      <div className="px-4 py-4 border-b border-slate-700/60 relative">
+      <div className="px-4 py-3.5 border-b border-white/10 relative">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-          </div>
+          <img
+            src="/images/boy-bell-circle.png"
+            alt=""
+            className="w-9 h-9 rounded-full object-cover flex-shrink-0 opacity-90"
+          />
           <div className="min-w-0">
-            <p className="text-white text-sm font-semibold leading-tight truncate">Ewing's Sarcoma</p>
-            <p className="text-slate-400 text-xs leading-tight">AI Support Assistant</p>
+            <img src="/images/wordmark-wide.png" alt="Bell Guide" className="h-6 w-auto brightness-0 invert opacity-90" />
+            <p className="text-[#94c9e0] text-[10px] leading-tight mt-0.5">AI Support Assistant</p>
           </div>
         </div>
         <button
           onClick={onCloseSidebar}
-          className="md:hidden absolute top-3 right-3 text-slate-400 hover:text-white p-1.5 rounded-lg transition-colors"
+          className="md:hidden absolute top-3 right-3 text-[#94c9e0] hover:text-white p-1.5 rounded-lg transition-colors"
           aria-label="Close menu"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -69,7 +68,7 @@ export default function ChatSidebar({
         <button
           onClick={() => onSetView('home')}
           className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-            view === 'home' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+            view === 'home' ? 'bg-brand-teal-mid text-white' : 'text-[#94c9e0] hover:bg-brand-teal-mid/60 hover:text-white'
           }`}
         >
           <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -81,7 +80,7 @@ export default function ChatSidebar({
         <button
           onClick={() => { onSetView('files'); onCloseSidebar(); }}
           className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-            view === 'files' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+            view === 'files' ? 'bg-brand-teal-mid text-white' : 'text-[#94c9e0] hover:bg-brand-teal-mid/60 hover:text-white'
           }`}
         >
           <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -97,7 +96,7 @@ export default function ChatSidebar({
         <button
           data-tutorial="new-chat"
           onClick={onNewChat}
-          className="w-full flex items-center justify-center gap-1.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
+          className="w-full flex items-center justify-center gap-1.5 py-2 bg-brand-teal hover:bg-brand-teal-hover text-white text-sm font-medium rounded-lg transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -107,9 +106,9 @@ export default function ChatSidebar({
       </div>
 
       {/* Chat list */}
-      <div className="flex-1 overflow-y-auto px-2 py-1 scrollbar-thin">
+      <div className="flex-1 overflow-y-auto px-2 py-1 scrollbar-thin-light">
         {chats.length === 0 ? (
-          <p className="text-slate-500 text-xs text-center py-6 px-3 leading-relaxed">
+          <p className="text-[#6aabca] text-xs text-center py-6 px-3 leading-relaxed">
             No chats yet.<br />Click "New Chat" to start.
           </p>
         ) : (
@@ -120,11 +119,11 @@ export default function ChatSidebar({
                   onClick={() => onSelectChat(chat.id)}
                   className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
                     currentChatId === chat.id
-                      ? 'bg-slate-700 text-white'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      ? 'bg-brand-teal-mid text-white'
+                      : 'text-[#bde3f0] hover:bg-brand-teal-mid/60 hover:text-white'
                   }`}
                 >
-                  <svg className="w-4 h-4 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 text-[#4a8aaa] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
@@ -140,7 +139,7 @@ export default function ChatSidebar({
                         if (e.key === 'Escape') setRenamingId(null);
                       }}
                       onClick={e => e.stopPropagation()}
-                      className="flex-1 bg-slate-600 text-white text-sm rounded px-1 py-0.5 outline-none min-w-0"
+                      className="flex-1 bg-brand-teal-mid text-white text-sm rounded px-1 py-0.5 outline-none min-w-0"
                     />
                   ) : (
                     <span className="flex-1 text-sm truncate">{chat.name}</span>
@@ -154,7 +153,7 @@ export default function ChatSidebar({
                     <button
                       onClick={e => startRename(chat, e)}
                       title="Rename"
-                      className="p-1 rounded text-slate-400 hover:text-white transition-colors"
+                      className="p-1 rounded text-[#94c9e0] hover:text-white transition-colors"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -164,7 +163,7 @@ export default function ChatSidebar({
                     <button
                       onClick={e => { e.stopPropagation(); onDeleteChat(chat.id); }}
                       title="Delete"
-                      className="p-1 rounded text-slate-400 hover:text-red-400 transition-colors"
+                      className="p-1 rounded text-[#94c9e0] hover:text-red-300 transition-colors"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -180,27 +179,27 @@ export default function ChatSidebar({
       </div>
 
       {/* Bottom buttons */}
-      <div className="px-3 py-3 border-t border-slate-700/60 space-y-1">
+      <div className="px-3 py-3 border-t border-white/10 space-y-1">
 
         {/* Medical Profile — standalone entry point */}
         <button
           data-tutorial="medical-profile-btn"
           onClick={onOpenMedicalProfile}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition-colors group"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-brand-teal-mid/60 text-[#bde3f0] hover:text-white transition-colors group"
         >
-          <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0 group-hover:bg-slate-600 transition-colors">
-            <svg className="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="w-8 h-8 rounded-lg bg-brand-teal-mid flex items-center justify-center flex-shrink-0 group-hover:bg-brand-teal transition-colors">
+            <svg className="w-4 h-4 text-[#94c9e0]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
           </div>
           <div className="text-left flex-1 min-w-0">
             <p className="text-sm font-medium truncate leading-tight">Medical Profile</p>
-            <p className="text-xs text-slate-500 leading-tight">
+            <p className="text-xs text-[#6aabca] leading-tight">
               {filledCount > 0 ? `${filledCount} field${filledCount !== 1 ? 's' : ''} filled` : 'Not set up yet'}
             </p>
           </div>
-          <svg className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-3.5 h-3.5 text-[#4a8aaa] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
@@ -209,25 +208,25 @@ export default function ChatSidebar({
         <button
           data-tutorial="profile-btn"
           onClick={onOpenProfile}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition-colors group"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-brand-teal-mid/60 text-[#bde3f0] hover:text-white transition-colors group"
         >
-          <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center flex-shrink-0 group-hover:bg-slate-500 transition-colors flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-brand-teal-mid flex items-center justify-center flex-shrink-0 group-hover:bg-brand-teal transition-colors flex-shrink-0">
             <span className="text-white text-xs font-semibold select-none">
               {getInitials(displayName, user?.email)}
             </span>
           </div>
           <div className="text-left flex-1 min-w-0">
             <p className="text-sm font-medium truncate leading-tight">{profileName}</p>
-            <p className="text-xs text-slate-500 leading-tight">Personalization &amp; account</p>
+            <p className="text-xs text-[#6aabca] leading-tight">Personalization &amp; account</p>
           </div>
-          <svg className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-3.5 h-3.5 text-[#4a8aaa] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
 
         {confirmLogout ? (
-          <div className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700">
-            <p className="text-xs text-slate-300 mb-2">Sign out of your account?</p>
+          <div className="px-3 py-2 rounded-lg bg-brand-teal-mid border border-white/10">
+            <p className="text-xs text-[#bde3f0] mb-2">Sign out of your account?</p>
             <div className="flex gap-2">
               <button
                 onClick={onLogout}
@@ -237,7 +236,7 @@ export default function ChatSidebar({
               </button>
               <button
                 onClick={() => setConfirmLogout(false)}
-                className="flex-1 text-xs py-1 text-slate-400 hover:text-white border border-slate-700 rounded-md transition-colors"
+                className="flex-1 text-xs py-1 text-[#94c9e0] hover:text-white border border-white/20 rounded-md transition-colors"
               >
                 Cancel
               </button>
@@ -247,7 +246,7 @@ export default function ChatSidebar({
           <button
             onClick={() => setConfirmLogout(true)}
             title="Sign out"
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-slate-800 transition-colors text-xs"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[#4a8aaa] hover:text-red-300 hover:bg-brand-teal-mid/60 transition-colors text-xs"
           >
             <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}

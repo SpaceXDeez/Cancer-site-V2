@@ -66,11 +66,6 @@ export default function HomePage({ isLoggedIn, user, onLoginClick, onStartChat }
           className="w-full object-contain max-h-[45vh] sm:max-h-[55vh]"
         />
         <div className="text-center py-8 px-4">
-          <img
-            src="/images/tagline.png"
-            alt="Knowledge and support to the bell and beyond"
-            className="h-7 sm:h-9 w-auto mx-auto mb-6 opacity-90"
-          />
           {isLoggedIn ? (
             <button
               onClick={onStartChat}

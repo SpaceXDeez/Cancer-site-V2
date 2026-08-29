@@ -254,7 +254,7 @@ export default function ChatSidebar({
           <img
             src="/images/boy-bell-circle.png"
             alt=""
-            className="w-20 h-20 object-contain opacity-70"
+            className="w-20 h-auto opacity-70"
           />
         </div>
       </div>

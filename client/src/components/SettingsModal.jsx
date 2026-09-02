@@ -49,6 +49,16 @@ const TABS = [
       </svg>
     ),
   },
+  {
+    id: 'about',
+    label: 'About',
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
 ];
 
 const AI_STYLES = [
@@ -241,7 +251,7 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
                   <button
                     onClick={savePersonalization}
                     disabled={saving}
-                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+                    className="px-5 py-2 bg-brand-teal hover:bg-brand-teal-dark disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
                   >
                     {saving ? 'Saving…' : 'Save'}
                   </button>
@@ -272,7 +282,7 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
                           value={s.id}
                           checked={aiStyle === s.id}
                           onChange={() => setAiStyle(s.id)}
-                          className="mt-0.5 accent-blue-600"
+                          className="mt-0.5 accent-brand-teal"
                         />
                         <div>
                           <p className="text-sm font-medium text-gray-900 leading-tight">{s.label}</p>
@@ -301,7 +311,7 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
                   <button
                     onClick={savePersonalization}
                     disabled={saving}
-                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+                    className="px-5 py-2 bg-brand-teal hover:bg-brand-teal-dark disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
                   >
                     {saving ? 'Saving…' : 'Save'}
                   </button>
@@ -366,7 +376,7 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
                     <button
                       type="submit"
                       disabled={pwLoading}
-                      className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="px-5 py-2 bg-brand-teal hover:bg-brand-teal-dark disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
                     >
                       {pwLoading ? 'Updating…' : 'Update password'}
                     </button>
@@ -452,6 +462,53 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
                   )}
                 </div>
               </>
+            )}
+
+            {/* ── About ── */}
+            {tab === 'about' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900 mb-1">About Bell Guide</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    Bell Guide is an AI-powered support tool built specifically for families navigating Ewing's sarcoma —
+                    one of the rarest and most complex bone cancers.
+                  </p>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <img src="/images/boy-bell-circle.png" alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Dylan Rossi</p>
+                      <p className="text-xs text-gray-500">Creator &amp; Ewing's sarcoma survivor</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    Dylan was diagnosed with Ewing's sarcoma and completed his last treatment at age 14.
+                    Two years later, at 16, he built Bell Guide — driven by the firsthand experience of how
+                    overwhelming it can be for patients and families to process medical information and know
+                    what questions to ask.
+                  </p>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    Dylan worked with his family on the vision for the app: an AI guide that holds your
+                    medical history, understands your specific situation, and helps you have better, more
+                    informed conversations with your care team.
+                  </p>
+                </div>
+
+                <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-yellow-800 uppercase tracking-wide mb-2">Partnership</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    Dylan and his family have partnered with <strong>XIT</strong> to spread the word about
+                    Bell Guide within the Ewing's sarcoma community and gather feedback on how it can be
+                    improved for patients and families at every stage of the journey.
+                  </p>
+                </div>
+
+                <div className="border-t border-gray-100 pt-4">
+                  <p className="text-xs text-gray-400 text-center italic">&ldquo;No one fights alone.&rdquo;</p>
+                </div>
+              </div>
             )}
           </div>
         </div>

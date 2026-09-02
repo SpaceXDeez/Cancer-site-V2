@@ -1,27 +1,14 @@
 ﻿import React from 'react';
 
-function RibbonIcon() {
-  return (
-    <svg width="18" height="26" viewBox="0 0 18 26" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      {/* Loop */}
-      <path d="M9 1C5.5 1 2.5 3.8 2.5 7.2C2.5 10 4.5 12.4 7.2 13.4L9 14L10.8 13.4C13.5 12.4 15.5 10 15.5 7.2C15.5 3.8 12.5 1 9 1Z" fill="#FCD34D"/>
-      {/* Left tail */}
-      <path d="M7.2 13.4L3 22L6.5 20L9 25L9 14L7.2 13.4Z" fill="#FCD34D"/>
-      {/* Right tail */}
-      <path d="M10.8 13.4L15 22L11.5 20L9 25L9 14L10.8 13.4Z" fill="#FCD34D"/>
-    </svg>
-  );
-}
-
 function Step({ number, title, description }) {
   return (
     <div className="flex gap-4">
-      <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0 mt-0.5">
+      <div className="w-9 h-9 rounded-full bg-brand-teal text-white flex items-center justify-center font-bold text-sm flex-shrink-0 mt-0.5">
         {number}
       </div>
       <div>
-        <p className="font-semibold text-gray-900 mb-1">{title}</p>
-        <p className="text-sm text-gray-500 leading-relaxed">{description}</p>
+        <p className="font-semibold text-brand-text-dark mb-1">{title}</p>
+        <p className="text-sm text-[#5a7a8a] leading-relaxed">{description}</p>
       </div>
     </div>
   );
@@ -29,13 +16,13 @@ function Step({ number, title, description }) {
 
 function CapabilityCard({ icon, title, description }) {
   return (
-    <div className="flex gap-3 p-4 rounded-xl border border-gray-100 bg-gray-50">
-      <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+    <div className="flex gap-3 p-4 rounded-xl border border-brand-border bg-white/70">
+      <div className="w-8 h-8 rounded-lg bg-brand-teal-light flex items-center justify-center text-brand-teal flex-shrink-0">
         {icon}
       </div>
       <div>
-        <p className="font-medium text-gray-800 text-sm mb-0.5">{title}</p>
-        <p className="text-xs text-gray-500 leading-relaxed">{description}</p>
+        <p className="font-medium text-brand-text-dark text-sm mb-0.5">{title}</p>
+        <p className="text-xs text-[#5a7a8a] leading-relaxed">{description}</p>
       </div>
     </div>
   );
@@ -43,25 +30,19 @@ function CapabilityCard({ icon, title, description }) {
 
 export default function HomePage({ isLoggedIn, user, onLoginClick, onStartChat }) {
   return (
-    <div className="flex-1 overflow-y-auto bg-white">
-      {/* Sticky top bar */}
-      <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700/50 px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2.5 pl-8 md:pl-0">
-          <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-          </div>
-          <span className="text-white text-sm font-semibold">Ewing's Sarcoma AI</span>
+    <div className="flex-1 overflow-y-auto bg-brand-cream">
+      {/* Sticky top nav */}
+      <div className="sticky top-0 z-10 bg-brand-cream/95 backdrop-blur-sm border-b border-brand-border px-4 py-2.5 flex items-center justify-between">
+        <div className="pl-9 md:pl-0">
+          <img src="/images/wordmark-wide.png" alt="Bell Guide" className="h-9 w-auto" />
         </div>
         <div className="flex items-center gap-2">
           {isLoggedIn ? (
             <>
-              <span className="text-slate-400 text-xs hidden sm:block">{user?.email}</span>
+              <span className="text-[#6a8a9a] text-xs hidden sm:block">{user?.email}</span>
               <button
                 onClick={onStartChat}
-                className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors"
+                className="px-4 py-1.5 bg-brand-teal hover:bg-brand-teal-dark text-white text-xs font-medium rounded-lg transition-colors"
               >
                 Open Chat
               </button>
@@ -69,7 +50,7 @@ export default function HomePage({ isLoggedIn, user, onLoginClick, onStartChat }
           ) : (
             <button
               onClick={onLoginClick}
-              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors"
+              className="px-4 py-1.5 bg-brand-teal hover:bg-brand-teal-dark text-white text-xs font-medium rounded-lg transition-colors"
             >
               Sign In
             </button>
@@ -77,68 +58,57 @@ export default function HomePage({ isLoggedIn, user, onLoginClick, onStartChat }
         </div>
       </div>
 
-      {/* Hero */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 px-6 py-14 text-center">
-        <div className="max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-blue-600/20 border border-blue-500/30 rounded-full px-4 py-1.5 mb-6">
-            <span className="w-2 h-2 bg-blue-400 rounded-full" />
-            <span className="text-blue-300 text-xs font-medium tracking-wide uppercase">Bell Guide AI</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white leading-snug mb-4">
-            AI support for Ewing's sarcoma{' '}
-            <span className="text-blue-400">patients and families.</span>
-          </h1>
-          <p className="text-slate-300 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto mb-8">
-            Ask questions about treatments, side effects, clinical trials, and navigating care —
-            powered by AI and shaped by the expertise of the Ewing's sarcoma community.
-          </p>
-          <div className="flex flex-wrap gap-3 justify-center">
-            {isLoggedIn ? (
-              <button
-                onClick={onStartChat}
-                className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg"
-              >
-                Open AI Chat
-              </button>
-            ) : (
+      {/* Hero: banner graphic + tagline + CTA */}
+      <div className="bg-brand-cream">
+        <img
+          src="/images/banner.jpg"
+          alt="Bell Guide — Every question. Every step. A guide along your cancer journey."
+          className="w-full object-contain max-h-[45vh] sm:max-h-[55vh]"
+        />
+        <div className="text-center py-8 px-4">
+          {isLoggedIn ? (
+            <button
+              onClick={onStartChat}
+              className="px-8 py-3.5 bg-brand-teal hover:bg-brand-teal-dark text-white text-sm font-semibold rounded-xl transition-colors shadow-lg"
+            >
+              Open AI Chat
+            </button>
+          ) : (
+            <div className="flex flex-col items-center gap-3">
               <button
                 onClick={onLoginClick}
-                className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg"
+                className="px-8 py-3.5 bg-brand-teal hover:bg-brand-teal-dark text-white text-sm font-semibold rounded-xl transition-colors shadow-lg"
               >
-                Get Started — It's Free
+                Get Started — It&apos;s Free
               </button>
-            )}
-          </div>
-          {/* NO ONE FIGHTS ALONE slogan */}
-          <div className="mt-6 flex items-center justify-center gap-3">
-            <RibbonIcon />
-            <span className="text-yellow-300 font-semibold tracking-widest text-sm uppercase">No One Fights Alone</span>
-            <RibbonIcon />
-          </div>
+              <p className="text-xs text-[#8aacba]">No payment required &middot; Your data is private and encrypted</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Body */}
-      <div className="max-w-3xl mx-auto px-6 py-12 space-y-14">
+      <div className="h-px bg-gradient-to-r from-transparent via-brand-border to-transparent mx-6" />
 
-        {/* What is this */}
+      {/* Body */}
+      <div className="max-w-3xl mx-auto px-5 py-12 space-y-14">
+
+        {/* What is Bell Guide */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-3 border-b-2 border-blue-100">What is this tool?</h2>
-          <p className="text-gray-600 leading-relaxed mb-4">
-            The <strong className="text-gray-800">Ewing's Sarcoma AI Support Assistant</strong> is a free resource built in
-            partnership with the <strong className="text-gray-800">XIT Foundation</strong> to help patients, parents, and
-            caregivers navigate one of the most complex and difficult diagnoses in pediatric oncology.
+          <h2 className="text-2xl font-bold text-brand-teal-dark mb-4 pb-3 border-b-2 border-brand-teal-light">What is Bell Guide?</h2>
+          <p className="text-[#3a5a6a] leading-relaxed mb-4">
+            <strong className="text-brand-text-dark">Bell Guide</strong> is a free AI-powered companion for{' '}
+            <strong className="text-brand-text-dark">Ewing&apos;s sarcoma</strong> patients, parents, and caregivers —
+            built to help you navigate one of the most complex diagnoses in pediatric oncology with clarity and confidence.
           </p>
-          <p className="text-gray-600 leading-relaxed">
-            This tool uses AI to answer your questions about Ewing's sarcoma — drawing on up-to-date knowledge of
-            chemotherapy regimens, clinical trials, surgical options, radiation therapy, relapse management, survivorship,
-            and more. When you fill out a patient profile, the AI tailors every response to your specific situation.
+          <p className="text-[#3a5a6a] leading-relaxed">
+            Ask questions about treatments, side effects, clinical trials, surgery, radiation, relapse options, and
+            survivorship. When you fill out a patient profile, every response is tailored to your specific situation.
           </p>
         </section>
 
         {/* How it works */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-3 border-b-2 border-blue-100">How it works</h2>
+          <h2 className="text-2xl font-bold text-brand-teal-dark mb-6 pb-3 border-b-2 border-brand-teal-light">How it works</h2>
           <div className="space-y-6">
             <Step
               number="1"
@@ -159,7 +129,7 @@ export default function HomePage({ isLoggedIn, user, onLoginClick, onStartChat }
           {!isLoggedIn && (
             <button
               onClick={onLoginClick}
-              className="mt-8 w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-colors shadow"
+              className="mt-8 w-full sm:w-auto px-6 py-3 bg-brand-teal hover:bg-brand-teal-dark text-white text-sm font-semibold rounded-xl transition-colors shadow"
             >
               Create your free account →
             </button>
@@ -168,7 +138,7 @@ export default function HomePage({ isLoggedIn, user, onLoginClick, onStartChat }
 
         {/* What you can ask */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-3 border-b-2 border-blue-100">What you can ask</h2>
+          <h2 className="text-2xl font-bold text-brand-teal-dark mb-6 pb-3 border-b-2 border-brand-teal-light">What you can ask</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <CapabilityCard
               title="Chemotherapy & Side Effects"
@@ -203,25 +173,25 @@ export default function HomePage({ isLoggedIn, user, onLoginClick, onStartChat }
           </div>
         </section>
 
-        {/* Partnership with XIT */}
+        {/* XIT Foundation */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-3 border-b-2 border-blue-100">XIT Foundation</h2>
-          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6">
-            <p className="text-gray-700 leading-relaxed mb-4">
-              The <strong className="text-gray-800">XIT Foundation</strong> is a nonprofit organization with one goal:
-              to fund the pursuit of a <em>cure</em> for Ewing's sarcoma — not just better management of the disease.
-              XIT funds only work aimed at curing Ewing's, drawing on the frontier of genetic medicine, gene editing,
+          <h2 className="text-2xl font-bold text-brand-teal-dark mb-4 pb-3 border-b-2 border-brand-teal-light">XIT Foundation</h2>
+          <div className="bg-white/60 border border-brand-border rounded-2xl p-6">
+            <p className="text-[#3a5a6a] leading-relaxed mb-4">
+              The <strong className="text-brand-text-dark">XIT Foundation</strong> is a nonprofit organization with one goal:
+              to fund the pursuit of a <em>cure</em> for Ewing&apos;s sarcoma — not just better management of the disease.
+              XIT funds only work aimed at curing Ewing&apos;s, drawing on the frontier of genetic medicine, gene editing,
               and nucleic-acid therapies.
             </p>
-            <p className="text-gray-700 leading-relaxed mb-5">
+            <p className="text-[#3a5a6a] leading-relaxed mb-5">
               XIT has collaborated on the development of this application by giving feedback on the app, and plan to
-              help spread the word about the app in the Ewing's community.
+              help spread the word about the app in the Ewing&apos;s community.
             </p>
             <a
               href="https://www.xit.org"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+              className="inline-flex items-center gap-2 text-sm font-medium text-brand-teal hover:text-brand-teal-dark transition-colors"
             >
               Learn more at xit.org
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -233,34 +203,45 @@ export default function HomePage({ isLoggedIn, user, onLoginClick, onStartChat }
 
         {/* About */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4 pb-3 border-b-2 border-blue-100">About this app</h2>
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-6">
-            <p className="text-gray-700 leading-relaxed mb-4">
-              This application was built by <strong className="text-gray-900">Dylan Rossi</strong>, an Ewing's sarcoma survivor.
-              Dylan built the app at 16, two years after completing his last treatment. He worked with his family on the idea with
-              a single goal: to help other families navigate their own fight with Ewing's sarcoma.
-            </p>
-            <p className="text-gray-700 leading-relaxed">
-              Dylan and his family have partnered with the <strong className="text-gray-900">XIT Foundation</strong> to spread the
-              word about the app across the Ewing's community and gather feedback on how it can be improved — because every family
-              deserves access to the best possible information.
-            </p>
+          <h2 className="text-2xl font-bold text-brand-teal-dark mb-4 pb-3 border-b-2 border-brand-teal-light">About Bell Guide</h2>
+          <div className="bg-gradient-to-br from-white/70 to-brand-teal-light/30 border border-brand-border rounded-2xl p-6">
+            <div className="flex flex-col sm:flex-row gap-5 items-start">
+              <img
+                src="/images/boy-bell-circle.png"
+                alt=""
+                className="w-24 h-24 rounded-full object-cover flex-shrink-0 mx-auto sm:mx-0 opacity-90"
+              />
+              <div>
+                <p className="text-[#3a5a6a] leading-relaxed mb-4">
+                  Bell Guide was built by <strong className="text-brand-text-dark">Dylan Rossi</strong>, an Ewing&apos;s sarcoma
+                  survivor. Dylan built the app at 16, two years after completing his last treatment — with a single goal:
+                  to help other families navigate their own fight with Ewing&apos;s sarcoma.
+                </p>
+                <p className="text-[#3a5a6a] leading-relaxed">
+                  Dylan and his family have partnered with the <strong className="text-brand-text-dark">XIT Foundation</strong>{' '}
+                  to spread the word about the app across the Ewing&apos;s community and gather feedback — because every family
+                  deserves access to the best possible information.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* Disclaimer */}
-        <div className="border-t border-gray-100 pt-8 text-center">
-          <p className="text-sm text-gray-400 leading-relaxed max-w-xl mx-auto">
-            <strong className="text-gray-500">Important:</strong> This AI assistant is for educational purposes only.
+        <div className="border-t border-brand-border pt-8 text-center">
+          <p className="text-sm text-[#7a9aaa] leading-relaxed max-w-xl mx-auto">
+            <strong className="text-[#5a7a8a]">Important:</strong> Bell Guide is for educational purposes only.
             Nothing here constitutes medical advice. Always make treatment decisions in close partnership with your
             medical oncology team.
           </p>
-          <p className="text-xs text-gray-300 mt-3">
-            Ewing's Sarcoma AI Support · In partnership with{' '}
+          <p className="text-xs text-[#aac5d0] mt-3">
+            Bell Guide &middot; In partnership with{' '}
             <a href="https://www.xit.org" target="_blank" rel="noopener noreferrer"
-              className="text-blue-400 hover:text-blue-600">XIT Foundation</a> · © 2026
+              className="text-brand-teal hover:text-brand-teal-dark transition-colors">XIT Foundation</a>{' '}
+            &middot; &copy; 2026
           </p>
         </div>
+
       </div>
     </div>
   );

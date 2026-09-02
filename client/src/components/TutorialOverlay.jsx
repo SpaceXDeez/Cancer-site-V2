@@ -195,7 +195,7 @@ export default function TutorialOverlay({ onDone, onSettingsNav, onOpenSidebar }
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto p-5 pb-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">
+            <span className="text-[10px] font-bold text-brand-teal uppercase tracking-widest">
               {step === 0 ? 'Quick Tour' : `Step ${step} of ${STEPS.length - 1}`}
             </span>
             <button onClick={skip} className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors">
@@ -220,7 +220,7 @@ export default function TutorialOverlay({ onDone, onSettingsNav, onOpenSidebar }
           </div>
           <button
             onClick={advance}
-            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors"
+            className="px-4 py-1.5 bg-brand-teal hover:bg-brand-teal-dark text-white text-xs font-semibold rounded-lg transition-colors"
           >
             {step === 0 ? "Let's go →" : isLast ? 'Got it ✓' : 'Next →'}
           </button>

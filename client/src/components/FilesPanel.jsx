@@ -4,7 +4,7 @@ function FileIcon({ mime }) {
   const isPdf = mime === 'pdf';
   return (
     <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${isPdf ? 'bg-red-100' : 'bg-blue-100'}`}>
-      <svg className={`w-5 h-5 ${isPdf ? 'text-red-600' : 'text-blue-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className={`w-5 h-5 ${isPdf ? 'text-red-600' : 'text-brand-teal'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
           d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
@@ -136,7 +136,7 @@ export default function FilesPanel({ authFetch, onUpdateProfile, profile }) {
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors flex-shrink-0"
+          className="flex items-center gap-1.5 bg-brand-teal hover:bg-brand-teal-dark disabled:opacity-50 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors flex-shrink-0"
         >
           {uploading ? (
             <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -201,7 +201,7 @@ export default function FilesPanel({ authFetch, onUpdateProfile, profile }) {
           <svg className="w-8 h-8 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
-          <p className="text-sm text-gray-500">Drag & drop or <span className="text-blue-600 font-medium">browse</span></p>
+          <p className="text-sm text-gray-500">Drag & drop or <span className="text-brand-teal font-medium">browse</span></p>
           <p className="text-xs text-gray-400 mt-1">PDF, JPG, PNG, WebP — up to 20 MB</p>
         </div>
 
@@ -237,7 +237,7 @@ export default function FilesPanel({ authFetch, onUpdateProfile, profile }) {
                         <button
                           onClick={() => toggleExpand(file.id, 'summary')}
                           title="AI Summary"
-                          className={`p-1.5 rounded-lg transition-colors ${expKey === 'summary' ? 'bg-blue-100 text-blue-700' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'}`}
+                          className={`p-1.5 rounded-lg transition-colors ${expKey === 'summary' ? 'bg-blue-100 text-blue-700' : 'text-gray-400 hover:text-brand-teal hover:bg-blue-50'}`}
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -286,7 +286,7 @@ export default function FilesPanel({ authFetch, onUpdateProfile, profile }) {
                       </span>
                       <button
                         onClick={() => setMedSuggestion({ filename: file.filename, medications: parsed.medications })}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                        className="text-xs text-brand-teal hover:text-brand-teal-dark font-medium transition-colors"
                       >
                         Add to profile →
                       </button>

@@ -5,6 +5,7 @@
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
+    background-color: #fdf6ee;
   }
   * {
     box-sizing: border-box;
@@ -14,13 +15,25 @@
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #475569 transparent;
+    scrollbar-color: #1a5470 transparent;
   }
   .scrollbar-thin::-webkit-scrollbar {
     width: 4px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: #475569;
+    background-color: #1a5470;
+    border-radius: 2px;
+  }
+  /* sidebar scrollbar stays on dark bg */
+  .scrollbar-thin-light {
+    scrollbar-width: thin;
+    scrollbar-color: #94c9e0 transparent;
+  }
+  .scrollbar-thin-light::-webkit-scrollbar {
+    width: 4px;
+  }
+  .scrollbar-thin-light::-webkit-scrollbar-thumb {
+    background-color: #94c9e0;
     border-radius: 2px;
   }
 }

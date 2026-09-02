@@ -206,22 +206,18 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
       <div className={isNew ? 'px-4 pt-6 pb-4' : 'flex-1 overflow-y-auto px-4 py-5'}>
         {messages === null ? (
           <div className="flex justify-center pt-12">
-            <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-brand-teal border-t-transparent rounded-full animate-spin" />
           </div>
         ) : isNew ? (
           /* Centered hero — shown before any message is sent */
           <div className="flex flex-col items-center gap-3 text-center">
-            <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            </div>
-            <p className="text-xl font-bold text-gray-900 max-w-sm leading-snug">
-              AI support assistant for Ewing&apos;s sarcoma patients and families
-            </p>
-            <p className="text-sm text-gray-500 max-w-xs leading-relaxed">
-              Ask about treatments, side effects, clinical trials, survivorship, and more.
+            <img
+              src="/images/wordmark-wide.png"
+              alt="Bell Guide"
+              className="h-28 sm:h-32 w-auto"
+            />
+            <p className="text-base text-[#5a7a8a] max-w-xs leading-relaxed">
+              AI support for Ewing&apos;s sarcoma patients and families
             </p>
           </div>
         ) : (
@@ -289,8 +285,8 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
           {(attachment || uploading || uploadError) && (
             <div className="mb-2 flex items-center gap-2">
               {uploading && (
-                <span className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5">
-                  <span className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                <span className="flex items-center gap-1.5 text-xs text-brand-teal bg-brand-teal-light border border-brand-teal/30 rounded-lg px-3 py-1.5">
+                  <span className="w-3 h-3 border-2 border-brand-teal border-t-transparent rounded-full animate-spin" />
                   Processing file…
                 </span>
               )}
@@ -313,7 +309,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
             </div>
           )}
 
-          <div data-tutorial="chat-input" className="flex items-end gap-2 bg-white border-2 border-gray-200 rounded-2xl px-4 py-3 shadow-md focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+          <div data-tutorial="chat-input" className="flex items-end gap-2 bg-white border-2 border-brand-border rounded-2xl px-4 py-3 shadow-md focus-within:border-brand-teal focus-within:ring-2 focus-within:ring-brand-teal/20 transition-all">
             {/* Hidden file input */}
             <input
               ref={fileInputRef}
@@ -328,7 +324,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
               onClick={() => fileInputRef.current?.click()}
               disabled={loading || uploading || messages === null}
               title="Attach a PDF or image"
-              className="flex-shrink-0 text-blue-400 hover:text-blue-600 disabled:opacity-30 transition-colors self-end mb-0.5"
+              className="flex-shrink-0 text-brand-teal hover:text-brand-teal-dark disabled:opacity-30 transition-colors self-end mb-0.5"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -348,7 +344,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
             <button
               onClick={() => send(input)}
               disabled={(!input.trim() && !attachment) || loading || uploading || messages === null}
-              className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 disabled:opacity-30 hover:bg-blue-700 transition-colors self-end"
+              className="w-9 h-9 bg-brand-teal rounded-xl flex items-center justify-center flex-shrink-0 disabled:opacity-30 hover:bg-brand-teal-dark transition-colors self-end"
             >
               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -373,12 +369,20 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
                 <button
                   key={p.label}
                   onClick={() => send(p.text)}
-                  className="text-left px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-200 text-xs text-gray-600 hover:text-blue-700 transition-colors leading-snug"
+                  className="text-left px-3 py-2 rounded-xl border border-brand-border bg-white hover:bg-brand-teal-light hover:border-brand-teal/40 text-xs text-[#3a5a6a] hover:text-brand-teal-dark transition-colors leading-snug"
                 >
                   {p.label}
                 </button>
               ))}
             </div>
+          </div>
+          {/* Tagline centered at the bottom of the new-chat view */}
+          <div className="flex justify-center pb-2">
+            <img
+              src="/images/tagline.png"
+              alt="Knowledge and support to the bell and beyond"
+              className="h-6 w-auto opacity-60"
+            />
           </div>
         </div>
       )}

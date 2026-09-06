@@ -128,7 +128,7 @@ export default function FilesPanel({ authFetch, onUpdateProfile, profile }) {
   return (
     <div className="flex flex-col h-full bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
+      <div className="bg-white border-b border-gray-200 pr-4 pl-14 md:pl-4 py-3 flex items-center justify-between flex-shrink-0">
         <div>
           <h2 className="text-base font-semibold text-gray-900">My Files</h2>
           <p className="text-xs text-gray-500">Upload test results, therapy summaries, and other medical documents.</p>

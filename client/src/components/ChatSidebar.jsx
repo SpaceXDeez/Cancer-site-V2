@@ -131,12 +131,12 @@ export default function ChatSidebar({
                       className="flex-1 bg-brand-teal-mid text-white text-sm rounded px-1 py-0.5 outline-none min-w-0"
                     />
                   ) : (
-                    <span className="flex-1 text-sm truncate">{chat.name}</span>
+                    <span className="flex-1 min-w-0 text-sm truncate">{chat.name}</span>
                   )}
 
-                  {/* Action buttons — visible on hover */}
+                  {/* Action buttons — always visible on touch, hover-reveal on desktop */}
                   <div
-                    className="hidden group-hover:flex items-center gap-0.5 flex-shrink-0"
+                    className="flex md:hidden md:group-hover:flex items-center gap-0.5 flex-shrink-0"
                     onClick={e => e.stopPropagation()}
                   >
                     <button

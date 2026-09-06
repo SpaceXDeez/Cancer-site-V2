@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { MarkdownContent } from './MessageBubble';
 
 export default function SharedMessageView({ token }) {
   const [content, setContent] = useState(null);
@@ -23,7 +24,7 @@ export default function SharedMessageView({ token }) {
           </svg>
         </div>
         <div>
-          <p className="text-sm font-semibold text-gray-900">Ewing Support AI</p>
+          <p className="text-sm font-semibold text-gray-900">Bell Guide</p>
           <p className="text-xs text-gray-500">Shared response</p>
         </div>
       </div>
@@ -45,7 +46,7 @@ export default function SharedMessageView({ token }) {
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-gray-200 px-6 py-5">
-              <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed break-words">{content}</p>
+              <MarkdownContent content={content} />
             </div>
           )}
 

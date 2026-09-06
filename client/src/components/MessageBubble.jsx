@@ -157,7 +157,7 @@ function Btn({ onClick, title, active, activeColor = 'text-blue-600', disabled, 
 // Handles the common patterns Claude uses: headers, bold, bullets, numbered lists,
 // code blocks, inline code, horizontal rules, and plain paragraphs.
 
-function MarkdownContent({ content }) {
+export function MarkdownContent({ content }) {
   const blocks = parseBlocks(content);
   return (
     <div className="text-sm text-gray-800 space-y-1.5 leading-relaxed break-words overflow-hidden">
@@ -198,6 +198,30 @@ function Block({ block }) {
       </ol>
     );
     case 'blank': return <div className="h-1" />;
+    case 'table': return (
+      <div className="overflow-x-auto mt-1">
+        <table className="text-xs border-collapse w-full">
+          {block.header && (
+            <thead>
+              <tr>
+                {block.header.map((c, i) => (
+                  <th key={i} className="text-left font-semibold text-gray-900 border border-gray-300 bg-gray-200/60 px-2 py-1 align-top">{inline(c)}</th>
+                ))}
+              </tr>
+            </thead>
+          )}
+          <tbody>
+            {block.rows.map((row, r) => (
+              <tr key={r}>
+                {row.map((c, i) => (
+                  <td key={i} className="border border-gray-300 px-2 py-1 align-top">{inline(c)}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
     default: return <p>{inline(block.text)}</p>;
   }
 }
@@ -231,6 +255,18 @@ function parseBlocks(content) {
 
     // Horizontal rule
     if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) { blocks.push({ type: 'hr' }); i++; continue; }
+
+    // Table — consecutive pipe-delimited rows; the |---| row separates header from body
+    if (/^\s*\|.*\|\s*$/.test(line)) {
+      const rows = [];
+      while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) { rows.push(lines[i]); i++; }
+      const splitRow = r => r.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+      const isSep = r => /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/.test(r);
+      let header = null, body = rows;
+      if (rows.length >= 2 && isSep(rows[1])) { header = splitRow(rows[0]); body = rows.slice(2); }
+      blocks.push({ type: 'table', header, rows: body.filter(r => !isSep(r)).map(splitRow) });
+      continue;
+    }
 
     // Unordered list — collect consecutive items
     if (/^[-*•]\s/.test(line)) {

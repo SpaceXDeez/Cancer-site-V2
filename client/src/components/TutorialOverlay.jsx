@@ -35,7 +35,7 @@ const STEPS = [
 const PAD = 12;
 const CALLOUT_W = 288;
 
-export default function TutorialOverlay({ onDone, onSettingsNav, onOpenSidebar }) {
+export default function TutorialOverlay({ onDone, onSettingsNav, onOpenSidebar, onCloseSidebar }) {
   const [step, setStep] = useState(0);
   const [targetRect, setTargetRect] = useState(null);
   const [win, setWin] = useState({
@@ -67,10 +67,10 @@ export default function TutorialOverlay({ onDone, onSettingsNav, onOpenSidebar }
     return () => onSettingsNav(null);
   }, []);
 
-  // Delayed re-measure — longer delay for steps that need a sidebar/modal to animate in
+  // Delayed re-measure — longer delay for steps that need a sidebar/modal to animate in or out
   useEffect(() => {
     if (!current.target) return;
-    const delay = current.requiresSidebar ? 400 : 120;
+    const delay = current.requiresSidebar || STEPS[step - 1]?.requiresSidebar ? 400 : 120;
     const t = setTimeout(measureTarget, delay);
     return () => clearTimeout(t);
   }, [step]);
@@ -127,6 +127,7 @@ export default function TutorialOverlay({ onDone, onSettingsNav, onOpenSidebar }
     if (nextIndex !== null) {
       const next = STEPS[nextIndex];
       if (next.requiresSidebar) onOpenSidebar?.();
+      else if (current.requiresSidebar) onCloseSidebar?.();
       if (next.settingsTab) {
         onSettingsNav(next.settingsTab);
       } else if (current.settingsTab) {
@@ -135,6 +136,7 @@ export default function TutorialOverlay({ onDone, onSettingsNav, onOpenSidebar }
       setStep(nextIndex);
     } else {
       if (current.settingsTab) onSettingsNav(null);
+      if (current.requiresSidebar) onCloseSidebar?.();
       localStorage.setItem('tutorialDone', '1');
       onDone();
     }
@@ -142,6 +144,7 @@ export default function TutorialOverlay({ onDone, onSettingsNav, onOpenSidebar }
 
   function skip() {
     if (current.settingsTab) onSettingsNav(null);
+    if (current.requiresSidebar) onCloseSidebar?.();
     localStorage.setItem('tutorialDone', '1');
     onDone();
   }

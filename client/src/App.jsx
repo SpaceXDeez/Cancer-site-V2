@@ -35,7 +35,9 @@ export default function App() {
   const [showTutorial, setShowTutorial]         = useState(false);
   const [tutorialSettingsTab, setTutorialSettingsTab] = useState(null);
 
-  // Load profile + chats whenever the user logs in
+  // Load profile + chats whenever the user logs in.
+  // Keyed on user id, not token: a rotated token (password change) must not remount the app.
+  const userId = user?.id ?? null;
   useEffect(() => {
     if (!token) {
       setProfile({});
@@ -70,7 +72,7 @@ export default function App() {
       }
     }).catch(console.error)
       .finally(() => setAppLoading(false));
-  }, [token]);
+  }, [userId]);
 
   const currentChat = chats.find(c => c && c.id === currentId) || null;
 
@@ -244,7 +246,7 @@ export default function App() {
           if (showQ && isFirstVisit) return;
           setShowSettings(true); closeSidebar();
         }}
-        onOpenMedicalProfile={() => { setShowQ(true); closeSidebar(); }}
+        onOpenMedicalProfile={() => { setShowReturnBanner(false); setShowQ(true); closeSidebar(); }}
         onLogout={logout}
         onSetView={(v) => { setView(v); closeSidebar(); }}
         onCloseSidebar={closeSidebar}
@@ -292,8 +294,9 @@ export default function App() {
         />
       )}
 
-      {/* Return-user reminder banner — shown once per session */}
-      {showReturnBanner && (        <div className="fixed left-1/2 -translate-x-1/2 z-50 bg-white border border-brand-teal/30 rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 max-w-sm w-[calc(100vw-2rem)]" style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
+      {/* Return-user reminder banner — shown once per session, never over a modal */}
+      {showReturnBanner && !showQ && !showSettings && !showTutorial && (
+        <div className="fixed left-1/2 -translate-x-1/2 z-50 bg-white border border-brand-teal/30 rounded-2xl shadow-xl px-5 py-3.5 flex items-center gap-3 max-w-sm w-[calc(100vw-2rem)]" style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
           <svg className="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -336,6 +339,7 @@ export default function App() {
           onDone={() => setShowTutorial(false)}
           onSettingsNav={handleSettingsNav}
           onOpenSidebar={() => setSidebarOpen(true)}
+          onCloseSidebar={closeSidebar}
         />
       )}
     </div>

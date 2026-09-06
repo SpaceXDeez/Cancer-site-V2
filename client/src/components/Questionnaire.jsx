@@ -1231,8 +1231,8 @@ export default function Questionnaire({ profile, isFirstVisit, onSave, onClose }
           </nav>
 
           {/* Mobile: horizontal scrollable section tabs */}
-          <div className="sm:hidden flex flex-col flex-1 min-h-0">
-            <div className="flex-shrink-0 border-b border-gray-100 overflow-x-auto">
+          <div className="sm:hidden flex flex-col flex-1 min-h-0 min-w-0 w-full">
+            <div className="flex-shrink-0 border-b border-gray-100 overflow-x-auto min-w-0">
               <div className="flex px-3 gap-1 py-1.5">
                 {SECTIONS.map((s, i) => {
                   const filled = sectionHasData(s.id, form);

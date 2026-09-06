@@ -14,6 +14,7 @@ export default function AuthForm({ onSuccess, compact = false }) {
     || window.location.hostname.includes('staging');
   const [isTest, setIsTest]     = useState(false);
   const [error, setError]       = useState(null);
+  const [notice, setNotice]     = useState(null);
   const [loading, setLoading]   = useState(false);
 
   async function handleForgot(e) {
@@ -100,17 +101,31 @@ export default function AuthForm({ onSuccess, compact = false }) {
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    setNotice(null);
     setLoading(true);
     try {
+      const body = { email: email.trim(), password };
       const res  = await fetch(`/api/auth/${mode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password, ...(mode === 'register' && { isTest }) }),
+        body: JSON.stringify({ ...body, ...(mode === 'register' && { isTest }) }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Something went wrong.'); return; }
-      saveAuth(data.token, data.user);
-      onSuccess?.();
+      if (data.token) { saveAuth(data.token, data.user); onSuccess?.(); return; }
+
+      // Register no longer reveals whether the email was taken. If the account is new the
+      // credentials just entered will work, so sign in straight away; otherwise fall back
+      // to the generic notice and let the email explain.
+      const loginRes = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const loginData = await loginRes.json();
+      if (loginRes.ok && loginData.token) { saveAuth(loginData.token, loginData.user); onSuccess?.(); return; }
+      setMode('login');
+      setNotice(data.message || 'Check your email to continue.');
     } catch {
       setError('Could not connect to the server. Is it running?');
     } finally {
@@ -200,6 +215,12 @@ export default function AuthForm({ onSuccess, compact = false }) {
               <span className="block text-xs text-gray-400 mt-0.5">Check this if you're testing the app, not a real patient or family member.</span>
             </span>
           </label>
+        )}
+
+        {notice && (
+          <div className="bg-brand-teal/10 border border-brand-teal/30 text-gray-700 rounded-lg px-3 py-2.5 text-sm">
+            {notice} If you already have an account, sign in below or use “Forgot password?”.
+          </div>
         )}
 
         {error && (

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext.jsx';
 
 function getInitials(name, email) {
   const src = name?.trim() || email || '';
@@ -81,6 +82,7 @@ const AI_STYLES = [
 
 export default function SettingsModal({ user, profile, authFetch, onSave, onDeleteAllChats, onDeleteAccount, onOpenQuestionnaire, onClose, initialTab = 'profile', forcedTab }) {
   const settings = profile?._settings || {};
+  const { saveAuth } = useAuth();
 
   const [tab, setTab]                   = useState(initialTab);
 
@@ -110,6 +112,9 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
   const [confirmChats, setConfirmChats]     = useState(false);
   const [confirmAccount, setConfirmAccount] = useState(false);
   const [deletingChats, setDeletingChats]   = useState(false);
+  const [deletePw, setDeletePw]             = useState('');
+  const [deleteError, setDeleteError]       = useState('');
+  const [deleting, setDeleting]             = useState(false);
 
   async function savePersonalization() {
     setSaving(true);
@@ -133,10 +138,22 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
       });
       const data = await res.json();
       if (!res.ok) { setPwError(data.error || 'Failed to change password.'); return; }
-      setPwSuccess('Password changed successfully.');
+      // Other sessions are now signed out; keep this one alive with the new token
+      if (data.token) saveAuth(data.token, data.user || user);
+      setPwSuccess('Password changed successfully. Other devices have been signed out.');
       setCurrentPw(''); setNewPw(''); setConfirmPw('');
     } catch { setPwError('Could not connect to server.'); }
     finally  { setPwLoading(false); }
+  }
+
+  async function handleDeleteAccount(e) {
+    e.preventDefault();
+    if (!deletePw) { setDeleteError('Enter your password to confirm.'); return; }
+    setDeleteError('');
+    setDeleting(true);
+    const err = await onDeleteAccount(deletePw);
+    setDeleting(false);
+    if (err) setDeleteError(err);
   }
 
   async function exportData() {
@@ -432,33 +449,46 @@ export default function SettingsModal({ user, profile, authFetch, onSave, onDele
                   )}
                 </div>
 
-                <div className="flex items-center justify-between py-3">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Delete account</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Permanently deletes your account, profile, and all data.</p>
-                  </div>
-                  {confirmAccount ? (
-                    <div className="flex gap-2 flex-shrink-0">
-                      <button
-                        onClick={onDeleteAccount}
-                        className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors"
-                      >
-                        Delete account
-                      </button>
-                      <button
-                        onClick={() => setConfirmAccount(false)}
-                        className="px-3 py-1.5 border border-gray-300 text-sm rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        Cancel
-                      </button>
+                <div className="py-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Delete account</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Permanently deletes your account, profile, and all data.</p>
                     </div>
-                  ) : (
-                    <button
-                      onClick={() => setConfirmAccount(true)}
-                      className="flex-shrink-0 px-4 py-1.5 border border-red-300 text-red-600 rounded-lg text-sm hover:bg-red-50 transition-colors"
-                    >
-                      Delete
-                    </button>
+                    {!confirmAccount && (
+                      <button
+                        onClick={() => setConfirmAccount(true)}
+                        className="flex-shrink-0 px-4 py-1.5 border border-red-300 text-red-600 rounded-lg text-sm hover:bg-red-50 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                  {confirmAccount && (
+                    <form onSubmit={handleDeleteAccount} className="mt-3 bg-red-50 border border-red-200 rounded-lg p-3 space-y-2">
+                      <label className="block text-xs font-medium text-red-700">Confirm with your password</label>
+                      <input
+                        type="password" value={deletePw} onChange={e => setDeletePw(e.target.value)}
+                        autoComplete="current-password" autoFocus placeholder="Current password"
+                        className="w-full border border-red-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
+                      />
+                      {deleteError && <p className="text-xs text-red-600">{deleteError}</p>}
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                          type="submit" disabled={deleting}
+                          className="px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm rounded-lg transition-colors"
+                        >
+                          {deleting ? 'Deleting…' : 'Permanently delete account'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setConfirmAccount(false); setDeletePw(''); setDeleteError(''); }}
+                          className="px-3 py-1.5 border border-gray-300 text-sm rounded-lg hover:bg-white transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
                   )}
                 </div>
               </>

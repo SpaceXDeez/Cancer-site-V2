@@ -21,7 +21,17 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Something went wrong.'); return; }
-      saveAuth(data.token, data.user);
+      if (data.token) { saveAuth(data.token, data.user); return; }
+      // Register no longer returns a token — try the credentials, else show the generic notice
+      const loginRes  = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
+      const loginData = await loginRes.json();
+      if (loginRes.ok && loginData.token) { saveAuth(loginData.token, loginData.user); return; }
+      setMode('login');
+      setError(data.message || 'Check your email to continue.');
     } catch {
       setError('Could not connect to the server. Is it running?');
     } finally {

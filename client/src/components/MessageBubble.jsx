@@ -52,7 +52,7 @@ export default function MessageBubble({ message, onRetry, isLast }) {
           <MarkdownContent content={message.content} />
         </div>
         <p className="text-xs text-gray-400 mt-1 pl-1">{time}</p>
-        <MessageActions content={message.content} onRetry={isLast ? onRetry : null} />
+        <MessageActions content={message.content} messageId={message.id} onRetry={isLast ? onRetry : null} />
       </div>
     </div>
   );
@@ -72,17 +72,19 @@ function AttachmentCard({ filename }) {
 }
 
 // ── Message action bar ────────────────────────────────────────────────────────
-function MessageActions({ content, onRetry }) {
+function MessageActions({ content, messageId, onRetry }) {
   const [copied,  setCopied]  = useState(false);
   const [shared,  setShared]  = useState(false); // link copied state
   const [sharing, setSharing] = useState(false); // in-flight
+  // Only messages persisted on the server (numeric id) can be shared
+  const canShare = Number.isInteger(Number(messageId)) && Number(messageId) > 0;
 
   function handleCopy() {
     navigator.clipboard.writeText(content).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
   }
 
   async function handleShare() {
-    if (sharing) return;
+    if (sharing || !canShare) return;
     setSharing(true);
     try {
       const res = await fetch('/api/share', {
@@ -91,8 +93,9 @@ function MessageActions({ content, onRetry }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('es_token')}`,
         },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ messageId: Number(messageId) }),
       });
+      if (!res.ok) return;
       const { token } = await res.json();
       const url = `${window.location.origin}/shared/${token}`;
       await navigator.clipboard.writeText(url);
@@ -114,7 +117,7 @@ function MessageActions({ content, onRetry }) {
       </Btn>
 
       {/* Share button with inline status label */}
-      <div className="flex items-center gap-1">
+      {canShare && <div className="flex items-center gap-1">
         <Btn onClick={handleShare} title="Share — copy link" active={shared} disabled={sharing} loading={sharing}>
           {sharing ? (
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3a9 9 0 109 9" />
@@ -129,7 +132,7 @@ function MessageActions({ content, onRetry }) {
             {sharing ? 'Creating link…' : 'Link copied!'}
           </span>
         )}
-      </div>
+      </div>}
 
       {onRetry && (
         <Btn onClick={onRetry} title="Try again">

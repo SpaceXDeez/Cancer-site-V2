@@ -131,11 +131,23 @@ export default function App() {
     } catch (err) { console.error(err); }
   }, [authFetch, profile]);
 
-  const handleDeleteAccount = useCallback(async () => {
+  // Returns an error string on failure so SettingsModal can show it; logs out on success
+  const handleDeleteAccount = useCallback(async (currentPassword) => {
     try {
-      await authFetch('/api/auth/account', { method: 'DELETE' });
-    } catch (err) { console.error(err); }
+      const res = await authFetch('/api/auth/account', {
+        method: 'DELETE',
+        body: JSON.stringify({ currentPassword }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return data.error || 'Could not delete account.';
+      }
+    } catch (err) {
+      console.error(err);
+      return 'Could not connect to the server.';
+    }
     logout();
+    return null;
   }, [authFetch, logout]);
 
   const handleDeleteAllChats = useCallback(async () => {

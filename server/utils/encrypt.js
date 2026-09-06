@@ -23,15 +23,11 @@ function encrypt(plaintext) {
 function decrypt(ciphertext) {
   if (!KEY || ciphertext == null) return ciphertext;
   if (typeof ciphertext !== 'string' || !ciphertext.startsWith(PREFIX)) return ciphertext;
-  try {
-    const [ivB64, tagB64, bodyB64] = ciphertext.slice(PREFIX.length).split('.');
-    const decipher = crypto.createDecipheriv(ALGO, KEY, Buffer.from(ivB64, 'base64'));
-    decipher.setAuthTag(Buffer.from(tagB64, 'base64'));
-    return decipher.update(Buffer.from(bodyB64, 'base64')) + decipher.final('utf8');
-  } catch {
-    // Should not happen in normal operation; return raw to avoid data loss
-    return ciphertext;
-  }
+  // Throw rather than return ciphertext: a silent fallback would let the client write garbage back over real data
+  const [ivB64, tagB64, bodyB64] = ciphertext.slice(PREFIX.length).split('.');
+  const decipher = crypto.createDecipheriv(ALGO, KEY, Buffer.from(ivB64, 'base64'));
+  decipher.setAuthTag(Buffer.from(tagB64, 'base64'));
+  return decipher.update(Buffer.from(bodyB64, 'base64')) + decipher.final('utf8');
 }
 
 module.exports = { encrypt, decrypt };

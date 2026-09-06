@@ -17,6 +17,7 @@ const SQLITE_SCHEMA = `
     email         TEXT    UNIQUE NOT NULL COLLATE NOCASE,
     password_hash TEXT    NOT NULL,
     is_test       INTEGER NOT NULL DEFAULT 0,
+    token_version INTEGER NOT NULL DEFAULT 0,
     created_at    TEXT    DEFAULT (datetime('now'))
   );
   CREATE TABLE IF NOT EXISTS profiles (
@@ -48,6 +49,8 @@ const SQLITE_SCHEMA = `
   CREATE TABLE IF NOT EXISTS shared_messages (
     token      TEXT PRIMARY KEY,
     content    TEXT NOT NULL,
+    user_id    INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    expires_at INTEGER,
     created_at TEXT DEFAULT (datetime('now'))
   );
   CREATE TABLE IF NOT EXISTS password_reset_tokens (
@@ -64,6 +67,7 @@ const PG_SCHEMA = `
     email         TEXT    UNIQUE NOT NULL,
     password_hash TEXT    NOT NULL,
     is_test       BOOLEAN NOT NULL DEFAULT FALSE,
+    token_version INTEGER NOT NULL DEFAULT 0,
     created_at    TIMESTAMPTZ DEFAULT NOW()
   );
   CREATE TABLE IF NOT EXISTS profiles (
@@ -95,6 +99,8 @@ const PG_SCHEMA = `
   CREATE TABLE IF NOT EXISTS shared_messages (
     token      TEXT PRIMARY KEY,
     content    TEXT NOT NULL,
+    user_id    BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    expires_at BIGINT,
     created_at TIMESTAMPTZ DEFAULT NOW()
   );
   CREATE TABLE IF NOT EXISTS password_reset_tokens (
@@ -122,6 +128,7 @@ async function initDb() {
     await pool.query(PG_SCHEMA);
     // Add column for existing DBs that predate this field
     await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT FALSE').catch(() => {});
+    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0').catch(() => {});
     // Migrations for tables added after initial deploy
     await pool.query(`CREATE TABLE IF NOT EXISTS shared_messages (
       token      TEXT PRIMARY KEY,
@@ -137,6 +144,8 @@ async function initDb() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )`).catch(() => {});
     await pool.query('ALTER TABLE documents ADD COLUMN IF NOT EXISTS ai_summary TEXT NOT NULL DEFAULT \'\'').catch(() => {});
+    await pool.query('ALTER TABLE shared_messages ADD COLUMN IF NOT EXISTS user_id BIGINT REFERENCES users(id) ON DELETE CASCADE').catch(() => {});
+    await pool.query('ALTER TABLE shared_messages ADD COLUMN IF NOT EXISTS expires_at BIGINT').catch(() => {});
     await pool.query(`CREATE TABLE IF NOT EXISTS password_reset_tokens (
       token      TEXT PRIMARY KEY,
       user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -151,7 +160,10 @@ async function initDb() {
     sqlite.exec('PRAGMA foreign_keys = ON');
     sqlite.exec(SQLITE_SCHEMA);
     try { sqlite.exec('ALTER TABLE users ADD COLUMN is_test INTEGER NOT NULL DEFAULT 0'); } catch { /* already exists */ }
+    try { sqlite.exec('ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 0'); } catch { /* already exists */ }
     try { sqlite.exec("ALTER TABLE documents ADD COLUMN ai_summary TEXT NOT NULL DEFAULT ''"); } catch { /* already exists */ }
+    try { sqlite.exec('ALTER TABLE shared_messages ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE'); } catch { /* already exists */ }
+    try { sqlite.exec('ALTER TABLE shared_messages ADD COLUMN expires_at INTEGER'); } catch { /* already exists */ }
     console.log('Using SQLite (local dev)');
   }
 }
@@ -201,9 +213,14 @@ const db = {
     return sqGet(q, [email]);
   },
   async getUserById(id) {
-    const q = 'SELECT id, is_test FROM users WHERE id = ?';
+    const q = 'SELECT id, email, password_hash, is_test, token_version FROM users WHERE id = ?';
     if (IS_PG) return pgGet(q, [id]);
     return sqGet(q, [id]);
+  },
+  async bumpTokenVersion(userId) {
+    const q = 'UPDATE users SET token_version = token_version + 1 WHERE id = ?';
+    if (IS_PG) return pgRun(q, [userId]);
+    return sqRun(q, [userId]);
   },
   async deleteAllChats(userId) {
     const q = 'DELETE FROM chats WHERE user_id = ?';
@@ -288,14 +305,22 @@ const db = {
   // Messages
   async insertMessage(chatId, role, content) {
     const enc = encrypt(content);
-    const q = 'INSERT INTO messages (chat_id, role, content) VALUES (?, ?, ?)';
-    if (IS_PG) return pgRun(q, [chatId, role, enc]);
-    return sqRun(q, [chatId, role, enc]);
+    if (IS_PG) return pgRun('INSERT INTO messages (chat_id, role, content) VALUES (?, ?, ?) RETURNING id', [chatId, role, enc]);
+    return sqRun('INSERT INTO messages (chat_id, role, content) VALUES (?, ?, ?)', [chatId, role, enc]);
   },
   async getMessages(chatId) {
     const q = 'SELECT id, role, content, created_at FROM messages WHERE chat_id = ? ORDER BY created_at ASC';
     const rows = IS_PG ? await pgAll(q, [chatId]) : await sqAll(q, [chatId]);
     return rows.map(r => ({ ...r, content: decrypt(r.content) }));
+  },
+  // Ownership enforced via join so a message id from another user's chat returns null
+  async getOwnedMessage(messageId, userId) {
+    const q = `SELECT m.id, m.role, m.content FROM messages m
+               JOIN chats c ON c.id = m.chat_id
+               WHERE m.id = ? AND c.user_id = ?`;
+    const row = IS_PG ? await pgGet(q, [messageId, userId]) : await sqGet(q, [messageId, userId]);
+    if (row) row.content = decrypt(row.content);
+    return row;
   },
 
   // Documents (persist across chats)
@@ -311,10 +336,15 @@ const db = {
     const rows = IS_PG ? await pgAll(q, [userId]) : await sqAll(q, [userId]);
     return rows.map(r => ({ ...r, filename: decrypt(r.filename), ai_summary: decrypt(r.ai_summary) }));
   },
-  async getUserDocumentsWithText(userId) {
-    const q = 'SELECT id, filename, text, created_at FROM documents WHERE user_id = ? ORDER BY created_at DESC';
-    const rows = IS_PG ? await pgAll(q, [userId]) : await sqAll(q, [userId]);
+  async getUserDocumentsWithText(userId, limit = 10) {
+    const q = 'SELECT id, filename, text, created_at FROM documents WHERE user_id = ? ORDER BY created_at DESC LIMIT ?';
+    const rows = IS_PG ? await pgAll(q, [userId, limit]) : await sqAll(q, [userId, limit]);
     return rows.map(r => ({ ...r, filename: decrypt(r.filename), text: decrypt(r.text) }));
+  },
+  async countUserDocuments(userId) {
+    const q = 'SELECT COUNT(*) AS n FROM documents WHERE user_id = ?';
+    const row = IS_PG ? await pgGet(q, [userId]) : await sqGet(q, [userId]);
+    return Number(row?.n || 0);
   },
   async getDocumentById(id, userId) {
     const q = 'SELECT id, filename, text, ai_summary, created_at FROM documents WHERE id = ? AND user_id = ?';
@@ -329,15 +359,28 @@ const db = {
   },
 
   // Shared message links
-  async createShare(token, content) {
-    const q = 'INSERT INTO shared_messages (token, content) VALUES (?, ?)';
-    if (IS_PG) return pgRun(q, [token, content]);
-    return sqRun(q, [token, content]);
+  async createShare(token, content, userId, expiresAt) {
+    const q = 'INSERT INTO shared_messages (token, content, user_id, expires_at) VALUES (?, ?, ?, ?)';
+    if (IS_PG) return pgRun(q, [token, encrypt(content), userId, expiresAt]);
+    return sqRun(q, [token, encrypt(content), userId, expiresAt]);
   },
   async getShare(token) {
-    const q = 'SELECT content, created_at FROM shared_messages WHERE token = ?';
-    if (IS_PG) return pgGet(q, [token]);
-    return sqGet(q, [token]);
+    const q = 'SELECT content, expires_at, created_at FROM shared_messages WHERE token = ?';
+    const row = IS_PG ? await pgGet(q, [token]) : await sqGet(q, [token]);
+    if (!row) return null;
+    // Legacy rows (pre-expiry) have NULL expires_at and are treated as expired
+    if (!row.expires_at || Number(row.expires_at) < Date.now()) return null;
+    return { content: decrypt(row.content), created_at: row.created_at };
+  },
+  async countActiveShares(userId) {
+    const q = 'SELECT COUNT(*) AS n FROM shared_messages WHERE user_id = ? AND expires_at > ?';
+    const row = IS_PG ? await pgGet(q, [userId, Date.now()]) : await sqGet(q, [userId, Date.now()]);
+    return Number(row?.n || 0);
+  },
+  async deleteShare(token, userId) {
+    const q = 'DELETE FROM shared_messages WHERE token = ? AND user_id = ?';
+    const r = IS_PG ? await pgRun(q, [token, userId]) : await sqRun(q, [token, userId]);
+    return r.changes > 0;
   },
 };
 

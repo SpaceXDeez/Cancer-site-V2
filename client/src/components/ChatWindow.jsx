@@ -110,7 +110,7 @@ export default function ChatWindow({ chat, profile, authFetch, onRenameChat, onU
       }
       const data = await res.json();
       setMessages(prev => [...(prev || []), {
-        id: `ai-${Date.now()}`, role: 'assistant', content: data.content, created_at: new Date().toISOString(),
+        id: data.messageId ?? `ai-${Date.now()}`, role: 'assistant', content: data.content, created_at: new Date().toISOString(),
       }]);
       if (data.contextSuggestion) {
         onUpdateProfile(data.contextSuggestion.fields); // auto-save without asking

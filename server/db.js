@@ -45,6 +45,7 @@ const SQLITE_SCHEMA = `
     ai_summary TEXT    NOT NULL DEFAULT '',
     created_at TEXT    DEFAULT (datetime('now'))
   );
+  CREATE TABLE IF NOT EXISTS shared_messages (
     token      TEXT PRIMARY KEY,
     content    TEXT NOT NULL,
     created_at TEXT DEFAULT (datetime('now'))

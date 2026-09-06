@@ -35,15 +35,30 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:4173',
-  ...(process.env.CLIENT_ORIGIN ? [process.env.CLIENT_ORIGIN] : []),
+  'https://bell-guide.com',
+  'https://www.bell-guide.com',
+  ...(process.env.CLIENT_ORIGIN ? process.env.CLIENT_ORIGIN.split(',').map(s => s.trim()).filter(Boolean) : []),
+  ...(process.env.APP_URL ? [process.env.APP_URL.replace(/\/$/, '')] : []),
 ];
 // CORS only needed for API routes (cross-origin dev) — static files are same-origin in prod
 const corsMiddleware = cors({
   origin: (origin, cb) => {
     if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    cb(new Error(`CORS: origin ${origin} not allowed`));
+    // Unknown origin: omit CORS headers so the browser blocks the response (no cookies → no CSRF risk)
+    cb(null, false);
   },
 });
+// Same-origin requests (SPA served by this server) must always pass, regardless of hostname
+const sameOriginOrCors = (req, res, next) => {
+  const origin = req.headers.origin;
+  const host   = req.headers['x-forwarded-host'] || req.headers.host;
+  if (origin && host) {
+    try {
+      if (new URL(origin).host === host) return next();
+    } catch { /* fall through to CORS */ }
+  }
+  corsMiddleware(req, res, next);
+};
 
 app.use(express.json({ limit: '2mb' }));
 
@@ -106,7 +121,7 @@ const anthropic   = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const db          = require('./db');
 const requireAuth = require('./middleware/auth');
 
-app.use('/api', corsMiddleware);
+app.use('/api', sameOriginOrCors);
 
 app.use('/api/auth',    require('./routes/auth'));
 app.use('/api/profile', require('./routes/profile'));
@@ -530,7 +545,7 @@ app.delete('/api/documents/:id', requireAuth, async (req, res) => {
 app.get('/health', (_req, res) => res.json({ status: 'ok', env: process.env.NODE_ENV }));
 
 // ── Shareable message links ───────────────────────────────────────────────────
-app.post('/api/share', corsMiddleware, requireAuth, async (req, res) => {
+app.post('/api/share', sameOriginOrCors, requireAuth, async (req, res) => {
   const { content } = req.body;
   if (!content || typeof content !== 'string' || content.trim().length === 0)
     return res.status(400).json({ error: 'content is required' });
@@ -539,7 +554,7 @@ app.post('/api/share', corsMiddleware, requireAuth, async (req, res) => {
   res.json({ token });
 });
 
-app.get('/api/shared/:token', corsMiddleware, async (req, res) => {
+app.get('/api/shared/:token', sameOriginOrCors, async (req, res) => {
   const row = await db.getShare(req.params.token);
   if (!row) return res.status(404).json({ error: 'Shared message not found' });
   res.json(row);
@@ -551,7 +566,13 @@ if (isProd) {
   app.use(express.static(distPath));
   app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
 }
-
+// ── JSON error handler — API clients call res.json(), so never return Express's HTML error page
+app.use((err, req, res, _next) => {
+  const status = err.status || err.statusCode || (err.type === 'entity.too.large' ? 413 : 500);
+  if (status >= 500) console.error('Unhandled error:', err.message);
+  if (res.headersSent) return;
+  res.status(status).json({ error: status >= 500 ? 'Something went wrong on the server.' : err.message });
+});
 // ── Start server after DB is ready ────────────────────────────────────────────
 db.initDb()
   .then(() => {

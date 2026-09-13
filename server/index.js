@@ -21,10 +21,13 @@ if (process.env.NODE_ENV === 'production') {
     console.error('ERROR: ENCRYPTION_KEY must be set in production — refusing to store patient data unencrypted.');
     process.exit(1);
   }
-  if (process.env.ALLOW_TEST_ACCOUNTS === 'true') {
-    console.error('ERROR: ALLOW_TEST_ACCOUNTS must not be enabled in production.');
+  // Staging runs with NODE_ENV=production too; it must opt in explicitly to keep test accounts off real prod
+  const isStaging = process.env.APP_ENV === 'staging' || /staging/i.test(process.env.APP_URL || '');
+  if (process.env.ALLOW_TEST_ACCOUNTS === 'true' && !isStaging) {
+    console.error('ERROR: ALLOW_TEST_ACCOUNTS is only permitted on staging (set APP_ENV=staging).');
     process.exit(1);
   }
+  if (process.env.ALLOW_TEST_ACCOUNTS === 'true') console.warn('WARN: test accounts enabled (staging).');
 }
 
 const app  = express();
